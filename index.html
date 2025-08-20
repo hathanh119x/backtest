@@ -44,7 +44,7 @@
   .field:focus-within{ border-color: rgba(var(--ring),.6); box-shadow: 0 0 0 4px rgba(var(--ring),.15) inset, 0 6px 20px rgba(0,0,0,.25); }
   .field input, .field select{
     background:transparent; border:none; outline:none; width:100%;
-    color:var(--txt); font-weight:400; font-size:.95rem; padding:.1rem 0;
+    color:var(--txt); font-weight:400; font-size:.88rem; padding:.1rem 0;
   }
   .field select{
     -webkit-appearance:none; appearance:none;
@@ -75,9 +75,8 @@
   /* ---------- Table ---------- */
   table{ width:100%; border-collapse:separate; border-spacing:0 }
   th,td{ padding:.55rem .6rem; border-bottom:1px solid var(--stroke); font-size:.8rem }
-  th{ white-space:normal; line-height:1.2 }
   td{ white-space:nowrap }
-  thead th{ color:var(--muted); font-weight:700; text-transform:uppercase; font-size:.68rem; letter-spacing:.04em; background:transparent }
+  table thead th{ white-space:normal; line-height:1.2; color:var(--muted); font-weight:700; text-transform:uppercase; font-size:.68rem; letter-spacing:.04em; background:transparent }
   tbody tr:nth-child(odd){ background:#0e1626 }
   tbody tr:nth-child(even){ background:#0f1a2e }
   tbody tr:hover td{ filter:brightness(1.05) }
@@ -147,7 +146,7 @@
     <div id="A">
       <h2 class="text-lg md:text-xl font-bold mb-3">Strategy A</h2>
 
-      <section id="a_ctrl" class="panel p-4 md:p-5 mb-5">
+      <section id="a_ctrl" class="controls panel p-4 md:p-5 mb-5">
         <div class="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
           <div>
             <div class="label">Strategy</div>
@@ -169,15 +168,15 @@
             </div>
           </div>
           <div class="cfg-dca">
-            <div class="label">Amount per buy (USD)</div>
+            <div class="label">Amount (USD)</div>
             <div class="field"><input id="a_amount" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
-            <div class="label">Target step (USD/period)</div>
+            <div class="label">Target Step (USD)</div>
             <div class="field"><input id="a_targetStep" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
-            <div class="label">Max contribution (USD, optional)</div>
+            <div class="label">Max (USD, Opt.)</div>
             <div class="field"><input id="a_maxContrib" type="number" min="0" step="1" /></div>
           </div>
           <div>
@@ -196,7 +195,8 @@
         <p class="text-xs mt-3" id="a_rangeHint" style="color:var(--muted)">Load a JSON file to enable the date range.</p>
       </section>
 
-      <section id="a_kpi" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
+      <section id="a_kpi" class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="panel p-3.5"><div class="label">Duration</div><div id="a_k_duration" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">Buys</div><div id="a_k_trades" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">Total invested</div><div id="a_k_invested" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="a_k_btc" class="value mt-1">-</div></div>
@@ -206,11 +206,7 @@
         <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="a_k_vsls" class="value mt-1">-</div></div>
       </section>
 
-      <section id="a_vaRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi" style="display:none">
-        <div class="panel p-3.5"><div class="label">Target step ($/period)</div><div id="a_k_targetStep" class="value mt-1">-</div></div>
-      </section>
-
-      <section id="a_chartWrap" class="panel p-4 md:p-5">
+      <section id="a_chartWrap" class="chart-wrap panel p-4 md:p-5">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">Portfolio over time (A)</h3>
           <div id="a_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
@@ -252,7 +248,7 @@
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
 
-      <section id="a_rsiWrap" class="panel p-4 md:p-5 mt-4">
+      <section id="a_rsiWrap" class="rsi-wrap panel p-4 md:p-5 mt-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">RSI (A)</h3>
           <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="a_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
@@ -260,7 +256,7 @@
         <div style="height:170px"><canvas id="a_chartRSI"></canvas></div>
       </section>
 
-      <details id="a_logWrap" class="panel p-4 md:p-5 mt-5" open>
+      <details id="a_logWrap" class="table-wrap panel p-4 md:p-5 mt-5" open>
         <summary class="cursor-pointer font-semibold text-base">Transaction details (A)</summary>
         <div class="mt-3">
           <table class="tbl-compact">
@@ -275,7 +271,7 @@
     <div id="B">
       <h2 class="text-lg md:text-xl font-bold mb-3">Strategy B</h2>
 
-      <section id="b_ctrl" class="panel p-4 md:p-5 mb-5">
+      <section id="b_ctrl" class="controls panel p-4 md:p-5 mb-5">
         <div class="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
           <div>
             <div class="label">Strategy</div>
@@ -297,15 +293,15 @@
             </div>
           </div>
           <div class="cfg-dca">
-            <div class="label">Amount per buy (USD)</div>
+            <div class="label">Amount (USD)</div>
             <div class="field"><input id="b_amount" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
-            <div class="label">Target step (USD/period)</div>
+            <div class="label">Target Step (USD)</div>
             <div class="field"><input id="b_targetStep" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
-            <div class="label">Max contribution (USD, optional)</div>
+            <div class="label">Max (USD, Opt.)</div>
             <div class="field"><input id="b_maxContrib" type="number" min="0" step="1" /></div>
           </div>
           <div>
@@ -324,7 +320,8 @@
         <p class="text-xs mt-3" id="b_rangeHint" style="color:var(--muted)">Load a JSON file to enable the date range.</p>
       </section>
 
-      <section id="b_kpi" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
+      <section id="b_kpi" class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div class="panel p-3.5"><div class="label">Duration</div><div id="b_k_duration" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">Buys</div><div id="b_k_trades" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">Total invested</div><div id="b_k_invested" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="b_k_btc" class="value mt-1">-</div></div>
@@ -334,11 +331,7 @@
         <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="b_k_vsls" class="value mt-1">-</div></div>
       </section>
 
-      <section id="b_vaRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi" style="display:none">
-        <div class="panel p-3.5"><div class="label">Target step ($/period)</div><div id="b_k_targetStep" class="value mt-1">-</div></div>
-      </section>
-
-      <section id="b_chartWrap" class="panel p-4 md:p-5">
+      <section id="b_chartWrap" class="chart-wrap panel p-4 md:p-5">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">Portfolio over time (B)</h3>
           <div id="b_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
@@ -380,7 +373,7 @@
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
 
-      <section id="b_rsiWrap" class="panel p-4 md:p-5 mt-4">
+      <section id="b_rsiWrap" class="rsi-wrap panel p-4 md:p-5 mt-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">RSI (B)</h3>
           <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="b_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
@@ -388,7 +381,7 @@
         <div style="height:170px"><canvas id="b_chartRSI"></canvas></div>
       </section>
 
-      <details id="b_logWrap" class="panel p-4 md:p-5 mt-5" open>
+      <details id="b_logWrap" class="table-wrap panel p-4 md:p-5 mt-5" open>
         <summary class="cursor-pointer font-semibold text-base">Transaction details (B)</summary>
         <div class="mt-3">
           <table class="tbl-compact">
@@ -435,6 +428,14 @@ function compactPercent(p){ const sign=p>=0?'+':'-'; const abs=Math.abs(p);
   const units=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
   for(const u of units){ if(abs>=u.v) return `${sign}${fmt(abs/u.v,2)}${u.s}%`; }
   return `${sign}${fmt(abs,0)}%`; }
+function humanDuration(d0,d1){
+  const ms=Math.max(0, new Date(d1)-new Date(d0));
+  const days=Math.floor(ms/86400000);
+  const y=Math.floor(days/365);
+  const m=Math.floor((days%365)/30);
+  const d=days-y*365-m*30;
+  return [y?`${y}Y`:null, m?`${m}M`:null, d?`${d}D`:null].filter(Boolean).join(' ')||'0D';
+}
 
 /* Normalize data (unchanged except number parsing for string) */
 function normalizeArray(arr){
@@ -500,8 +501,8 @@ function runDCA(series,freq,amount,sISO,eISO){
       log.push({date:p.date, price:p.close, invested:amount, totalInvested:invested, value:val}); }
     invS.push({date:p.date, invested}); port.push({date:p.date, price:p.close, value:btc*p.close, invested});
   }
-  const last=series[series.length-1].close;
-  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, value:btc*last,
+  const lastEntry=series[series.length-1]; const last=lastEntry.close;
+  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastEntry.date, value:btc*last,
            firstBuyDate:schedule[0]||null, logRows:log, portfolioSeries:port, investedSeries:invS };
 }
 
@@ -527,26 +528,30 @@ function runVA(series,freq,vaParams,sISO,eISO){
     invS.push({date:p.date, invested});
     port.push({date:p.date, price:p.close, value:btc*p.close, invested});
   }
-  const last=series[series.length-1].close;
-  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, value:btc*last,
+  const lastEntry=series[series.length-1]; const last=lastEntry.close;
+  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastEntry.date, value:btc*last,
            firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS };
 }
 function calcLumpSum(invested,firstBuyDate,lastPrice){
   const entry=PRICE_MAP.get(firstBuyDate); if(!entry) return null; const qty=invested/entry; return {entryPrice:entry, btc:qty, value:qty*lastPrice};
 }
 
-function equalizeSections(){
-  const pairs=[['a_ctrl','b_ctrl'],['a_kpi','b_kpi'],['a_chartWrap','b_chartWrap'],['a_rsiWrap','b_rsiWrap'],['a_logWrap','b_logWrap']];
-  pairs.forEach(([a,b])=>{
-    const elA=document.getElementById(a), elB=document.getElementById(b);
-    if(!elA || !elB){ return; }
-    elA.style.minHeight=''; elB.style.minHeight='';
-    if(elA.offsetParent===null || elB.offsetParent===null){ return; }
-    const h=Math.max(elA.offsetHeight, elB.offsetHeight);
-    elA.style.minHeight=h+'px'; elB.style.minHeight=h+'px';
-  });
+function mh(aSel,bSel){
+  const a=document.querySelector(aSel), b=document.querySelector(bSel);
+  if(!a||!b) return;
+  a.style.minHeight=b.style.minHeight='';
+  const h=Math.max(a.offsetHeight,b.offsetHeight);
+  a.style.minHeight=b.style.minHeight=h+'px';
 }
-window.addEventListener('resize', equalizeSections);
+function matchHeights(){
+  mh('#A .controls','#B .controls');
+  mh('#A .kpi','#B .kpi');
+  mh('#A .chart-wrap','#B .chart-wrap');
+  mh('#A .rsi-wrap','#B .rsi-wrap');
+  mh('#A .table-wrap','#B .table-wrap');
+}
+const debouncedMH=(()=>{ let t; return ()=>{ clearTimeout(t); t=setTimeout(matchHeights,150);} })();
+window.addEventListener('resize',debouncedMH);
 
 /* Indicators */
 const SMA=(arr,p)=>{const out=new Array(arr.length).fill(null); let s=0; for(let i=0;i<arr.length;i++){ s+=arr[i]; if(i>=p) s-=arr[i-p]; if(i>=p-1) out[i]=s/p; } return out; };
@@ -601,6 +606,7 @@ function createWorkspace(prefix){
       const scope=document.getElementById(prefix.toUpperCase());
       scope.querySelectorAll('.cfg-dca').forEach(d=>d.classList.toggle('hidden',type!=='dca'));
       scope.querySelectorAll('.cfg-va').forEach(d=>d.classList.toggle('hidden',type!=='va'));
+      debouncedMH();
     },
 
     renderCharts(series, investedSeries, indicators){
@@ -683,6 +689,9 @@ function createWorkspace(prefix){
       const invested=r.invested, value=r.value;
       const pnlPct=invested>0?(value/invested-1)*100:null;
       const buyCount=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
+      const kdur=el('k_duration');
+      if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate);
+      else kdur.textContent='—';
       el('k_trades').textContent = fmt(buyCount,0);
       const kinv=el('k_invested'); kinv.textContent=compactUSD(invested); kinv.title='Net cashflow';
       el('k_btc').textContent=fmt(r.btc,3);
@@ -693,12 +702,6 @@ function createWorkspace(prefix){
       else{ kpnl.textContent='—'; kpnl.title='Return undefined when net invested ≤ 0'; }
       if(ls){ const lsPct=pnlPct!=null?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null?compactPercent(pnlPct-lsPct):'—'; }
       else{ el('k_vsls').textContent='—'; }
-
-      const vaRow=document.getElementById(prefix+'_vaRow');
-      if(mode==='va'){
-        vaRow.style.display='grid';
-        el('k_targetStep').textContent=compactUSD(this.getTargetStep());
-      } else { vaRow.style.display='none'; }
 
       const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
       head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr>';
@@ -737,7 +740,7 @@ function createWorkspace(prefix){
       const buys=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
       document.getElementById(prefix+'_status').textContent=
         `Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}`;
-      equalizeSections();
+      matchHeights();
     },
 
     refreshIndicatorsOnly(){
@@ -757,14 +760,17 @@ function createWorkspace(prefix){
       el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
       document.getElementById(prefix+'_status').textContent='Ready.';
       this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null;
-      el('k_trades').textContent='-'; el('k_invested').textContent='-'; el('k_btc').textContent='-'; el('k_avg').textContent='-';
-      el('k_value').textContent='-'; el('k_pnl').textContent='-'; el('k_vsls').textContent='-'; document.getElementById(prefix+'_vaRow').style.display='none'; el('log').innerHTML='';
-      equalizeSections();
+      el('k_duration').textContent='-'; el('k_trades').textContent='-'; el('k_invested').textContent='-'; el('k_btc').textContent='-'; el('k_avg').textContent='-';
+      el('k_value').textContent='-'; el('k_pnl').textContent='-'; el('k_vsls').textContent='-'; el('log').innerHTML='';
+      matchHeights();
     },
 
     bind(){
       const self=this;
       this.ensurePickers();
+      document.querySelectorAll('#'+prefix.toUpperCase()+' input, #'+prefix.toUpperCase()+' select').forEach(el=>{
+        ['input','change'].forEach(ev=>el.addEventListener(ev,debouncedMH));
+      });
       document.getElementById(prefix+'_runBtn').addEventListener('click', ()=>self.run());
       document.getElementById(prefix+'_resetBtn').addEventListener('click', ()=>self.reset());
       el('type').addEventListener('change', ()=>self.toggleStrategy());
@@ -792,17 +798,18 @@ function copyConfig(from,to){
       const s=document.getElementById(from+'_'+k), d=document.getElementById(to+'_'+k); if(s&&d) d.value=s.value;
     });
   }
+  debouncedMH();
 }
 const WSA=createWorkspace('a'); const WSB=createWorkspace('b');
 document.getElementById('copyAtoB').addEventListener('click', ()=>copyConfig('a','b'));
 document.getElementById('copyBtoA').addEventListener('click', ()=>copyConfig('b','a'));
 
 const grid=document.getElementById('gridWrap');
-function setView(mode){ grid.classList.remove('two','focusA','focusB'); grid.classList.add(mode); equalizeSections(); }
+function setView(mode){ grid.classList.remove('two','focusA','focusB'); grid.classList.add(mode); matchHeights(); }
 document.getElementById('focusA').addEventListener('click', ()=>setView('focusA'));
 document.getElementById('focusB').addEventListener('click', ()=>setView('focusB'));
 document.getElementById('splitView').addEventListener('click', ()=>setView('two'));
-equalizeSections();
+matchHeights();
 </script>
 </body>
 </html>
