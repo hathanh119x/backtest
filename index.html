@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.3.0</title>
+
+<!-- Fonts & UI libs -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+  :root{
+    color-scheme: dark;
+    --bg: #0b1220;
+    --panel: #0f1629;
+    --panel-2: #0f172a;
+    --stroke: #1f2a44;
+    --stroke-2: #26324d;
+    --txt: #e6e9ef;
+    --muted: #9aa4b2;
+    --brand: #5b8cff;
+    --brand-2: #2f6bff;
+    --ring: 76 145 255; /* rgb */
+    --radius: 14px;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+  }
+  html,body{ background:var(--bg); color:var(--txt); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; font-size:14px; }
+  .panel{ background:linear-gradient(180deg, rgba(17,24,39,.6), rgba(10,15,26,.7));
+          border:1px solid var(--stroke); border-radius:var(--radius); box-shadow:var(--shadow); }
+  .chip{ font-size:.72rem; padding:.28rem .6rem; border-radius:999px; background:rgba(15,23,42,.7); border:1px solid var(--stroke-2); color:var(--muted) }
+
+  /* ---------- Fields ---------- */
+  .field{
+    display:flex; align-items:center; gap:.55rem;
+    background: radial-gradient(120% 120% at 50% -10%, rgba(255,255,255,.06) 0%, rgba(255,255,255,0) 70%) , #0c1426;
+    border:1px solid var(--stroke-2); border-radius:16px;
+    padding: .6rem .8rem; transition: .18s border, .18s box-shadow, .18s transform;
+  }
+  .field:focus-within{ border-color: rgba(var(--ring),.6); box-shadow: 0 0 0 4px rgba(var(--ring),.15) inset, 0 6px 20px rgba(0,0,0,.25); }
+  .field input, .field select{
+    background:transparent; border:none; outline:none; width:100%;
+    color:var(--txt); font-weight:600; font-size:.95rem; padding:.1rem 0;
+  }
+  .field select{
+    -webkit-appearance:none; appearance:none;
+    background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" fill="%239aa4b2" viewBox="0 0 20 20"><path d="M5 7l5 6 5-6z"/></svg>');
+    background-repeat:no-repeat; background-position:right .1rem center; background-size:16px;
+    padding-right:1.3rem;
+  }
+  .label{ color:var(--muted); font-size:.72rem; letter-spacing:.06em; text-transform:uppercase; margin-bottom:.35rem }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    --b: var(--brand);
+    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,0)) , linear-gradient(135deg, var(--b), var(--brand-2));
+    border:1px solid rgba(91,140,255,.35); color:white; font-weight:800; letter-spacing:.01em;
+    padding:.7rem 1rem; border-radius:14px; transition:.18s transform, .18s filter, .18s box-shadow; box-shadow:0 8px 24px rgba(47,107,255,.25);
+  }
+  .btn:hover{ transform: translateY(-1px); filter:saturate(1.05) }
+  .btn:active{ transform: translateY(0) scale(.99) }
+  .btn.ghost{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+    border:1px solid var(--stroke-2); color:var(--txt); box-shadow:none;
+  }
+
+  /* ---------- KPI ---------- */
+  .kpi .label{ font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
+  .kpi .value{ font-weight:800; font-size:1.06rem; white-space:nowrap }
+
+  /* ---------- Table ---------- */
+  table{ width:100%; border-collapse:separate; border-spacing:0 }
+  th,td{ padding:.55rem .6rem; border-bottom:1px solid var(--stroke); white-space:nowrap; font-size:.8rem }
+  thead th{ color:var(--muted); font-weight:700; text-transform:uppercase; font-size:.68rem; letter-spacing:.04em; background:transparent }
+  tbody tr:nth-child(odd){ background:#0e1626 }
+  tbody tr:nth-child(even){ background:#0f1a2e }
+  tbody tr:hover td{ filter:brightness(1.05) }
+  .gain{ color:#22c55e; font-weight:600 } .loss{ color:#ef4444; font-weight:600 }
+
+  /* ---------- Indicators row ---------- */
+  .ind-row{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+  .ind-card{ padding:12px 14px }
+  .switch{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap }
+  .switch input[type="checkbox"]{ width:1.05rem; height:1.05rem; accent-color:#22c55e; cursor:pointer; appearance:auto }
+  .num-s{ width:64px }
+
+  /* ---------- Drop ---------- */
+  .drop{ border:2px dashed var(--stroke-2); border-radius:16px; text-align:center; padding:14px; color:var(--muted); font-size:.95rem }
+  .drop.drag{ background:#101a33 }
+
+  /* ---------- Dual grid ---------- */
+  #gridWrap{ display:grid; gap:20px; transition:grid-template-columns .35s ease, gap .25s ease; grid-template-columns:minmax(0,1fr); }
+  @media (min-width:1024px){
+    #gridWrap.two    { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+    #gridWrap.focusA { grid-template-columns: minmax(0,1fr); }
+    #gridWrap.focusB { grid-template-columns: minmax(0,1fr); }
+  }
+  #gridWrap.focusA #B, #gridWrap.focusB #A { opacity:0; transform:translateX(10px); pointer-events:none; display:none; }
+  #gridWrap.two #A, #gridWrap.two #B { opacity:1; transform:none; pointer-events:auto; display:block; }
+
+  /* ---------- Flatpickr Dark tune ---------- */
+  .flatpickr-calendar{ background:#0f172a; border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
+  .flatpickr-months .flatpickr-month{ color:var(--txt) }
+  .flatpickr-day{ color:#d1d5db } .flatpickr-day.today{ border-color:#4f46e5 }
+  .flatpickr-day.selected{ background:#2563eb; border-color:#2563eb }
+</style>
+</head>
+<body>
+<div class="max-w-[1400px] mx-auto p-5 md:p-8">
+
+  <header class="flex items-start md:items-center justify-between gap-4 mb-4">
+    <div>
+      <div class="flex items-center gap-3 flex-wrap">
+        <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
+        <span class="chip">Source: Local JSON (daily close, USD)</span>
+        <span class="chip">Dual v1.3.0</span>
+      </div>
+      <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
+    </div>
+  </header>
+
+  <!-- LOAD -->
+  <section class="panel p-4 md:p-5 mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
+      <div>
+        <div class="label">Select price file (JSON)</div>
+        <div class="field"><input id="fileInput" type="file" accept="application/json,.json" /></div>
+        <p class="text-xs mt-2" style="color:var(--muted)">Supported: <code>[{"date":"YYYY-MM-DD","close":123.45}, …]</code> or semicolon-joined rows (auto-detected).</p>
+      </div>
+      <div class="md:col-span-2">
+        <div id="drop" class="drop">Drag & drop the JSON file here</div>
+      </div>
+    </div>
+    <p id="loadStatus" class="text-xs mt-3" style="color:var(--muted)">No data loaded.</p>
+  </section>
+
+  <!-- UTIL -->
+  <section class="panel p-3.5 md:p-4 mb-5">
+    <div class="flex flex-wrap gap-2 items-center">
+      <button id="copyAtoB" class="btn">Copy A → B</button>
+      <button id="copyBtoA" class="btn">Copy B → A</button>
+      <span class="text-xs mx-1" style="color:var(--muted)">|</span>
+      <button id="focusA" class="btn ghost">Focus A</button>
+      <button id="focusB" class="btn ghost">Focus B</button>
+      <button id="splitView" class="btn">Split view</button>
+      <span class="text-xs" style="color:var(--muted)">(Focus sẽ tạm ẩn 1 bên và mở rộng bên còn lại full width.)</span>
+    </div>
+  </section>
+
+  <div id="gridWrap" class="two">
+    <!-- Strategy A -->
+    <div id="A">
+      <h2 class="text-lg md:text-xl font-bold mb-3">Strategy A</h2>
+
+      <section class="panel p-4 md:p-5 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+          <div>
+            <div class="label">Repeat</div>
+            <div class="field">
+              <select id="a_frequency">
+                <option value="daily">Daily</option>
+                <option value="weekly" selected>Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="label">Amount per buy (USD)</div>
+            <div class="field"><input id="a_amount" type="number" min="1" step="1" value="100" /></div>
+          </div>
+          <div>
+            <div class="label">Start date</div>
+            <div class="field"><input id="a_startDate" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div>
+            <div class="label">End date</div>
+            <div class="field"><input id="a_endDate" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div class="flex gap-2 col-span-2">
+            <button id="a_runBtn" class="btn w-full" disabled>Run backtest</button>
+            <button id="a_resetBtn" class="btn ghost" type="button">Reset</button>
+          </div>
+        </div>
+        <p class="text-xs mt-3" id="a_rangeHint" style="color:var(--muted)">Load a JSON file to enable the date range.</p>
+      </section>
+
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
+        <div class="panel p-3.5"><div class="label">Buys</div><div id="a_k_trades" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Total invested</div><div id="a_k_invested" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="a_k_btc" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Average cost</div><div id="a_k_avg" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Final value</div><div id="a_k_value" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">DCA return</div><div id="a_k_pnl" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="a_k_vsls" class="value mt-1">-</div></div>
+      </section>
+
+      <section class="panel p-4 md:p-5">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base md:text-lg font-semibold">Portfolio over time (A)</h3>
+          <div id="a_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
+        </div>
+        <div style="height:420px"><canvas id="a_chartMain"></canvas></div>
+
+        <div class="ind-row mt-3">
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="a_maOn"><label for="a_maOn" style="color:var(--muted)">SMA</label>
+              <input id="a_maPeriod" type="number" min="2" value="50" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">period</span>
+            </div>
+          </div>
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="a_emaOn"><label for="a_emaOn" style="color:var(--muted)">EMA</label>
+              <input id="a_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">period</span>
+            </div>
+          </div>
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="a_rsiOn" checked><label for="a_rsiOn" style="color:var(--muted)">RSI</label>
+              <input id="a_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">(panel below)</span>
+            </div>
+          </div>
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="a_rsiAlertOn" checked><label for="a_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+              <input id="a_rsiNear" type="number" min="0" value="2" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">near</span>
+            </div>
+            <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
+          </div>
+        </div>
+
+        <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
+      </section>
+
+      <section class="panel p-4 md:p-5 mt-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base md:text-lg font-semibold">RSI (A)</h3>
+          <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="a_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
+        </div>
+        <div style="height:170px"><canvas id="a_chartRSI"></canvas></div>
+      </section>
+
+      <details class="panel p-4 md:p-5 mt-5" open>
+        <summary class="cursor-pointer font-semibold text-base">Transaction details (A)</summary>
+        <div class="mt-3">
+          <table class="tbl-compact">
+            <thead><tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr></thead>
+            <tbody id="a_log"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+
+    <!-- Strategy B -->
+    <div id="B">
+      <h2 class="text-lg md:text-xl font-bold mb-3">Strategy B</h2>
+
+      <section class="panel p-4 md:p-5 mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-6 gap-3 items-end">
+          <div>
+            <div class="label">Repeat</div>
+            <div class="field">
+              <select id="b_frequency">
+                <option value="daily">Daily</option>
+                <option value="weekly" selected>Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="label">Amount per buy (USD)</div>
+            <div class="field"><input id="b_amount" type="number" min="1" step="1" value="100" /></div>
+          </div>
+          <div>
+            <div class="label">Start date</div>
+            <div class="field"><input id="b_startDate" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div>
+            <div class="label">End date</div>
+            <div class="field"><input id="b_endDate" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div class="flex gap-2 col-span-2">
+            <button id="b_runBtn" class="btn w-full" disabled>Run backtest</button>
+            <button id="b_resetBtn" class="btn ghost" type="button">Reset</button>
+          </div>
+        </div>
+        <p class="text-xs mt-3" id="b_rangeHint" style="color:var(--muted)">Load a JSON file to enable the date range.</p>
+      </section>
+
+      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
+        <div class="panel p-3.5"><div class="label">Buys</div><div id="b_k_trades" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Total invested</div><div id="b_k_invested" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="b_k_btc" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Average cost</div><div id="b_k_avg" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Final value</div><div id="b_k_value" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">DCA return</div><div id="b_k_pnl" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="b_k_vsls" class="value mt-1">-</div></div>
+      </section>
+
+      <section class="panel p-4 md:p-5">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base md:text-lg font-semibold">Portfolio over time (B)</h3>
+          <div id="b_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
+        </div>
+        <div style="height:420px"><canvas id="b_chartMain"></canvas></div>
+
+        <div class="ind-row mt-3">
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="b_maOn"><label for="b_maOn" style="color:var(--muted)">SMA</label>
+              <input id="b_maPeriod" type="number" min="2" value="50" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">period</span>
+            </div>
+          </div>
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="b_emaOn"><label for="b_emaOn" style="color:var(--muted)">EMA</label>
+              <input id="b_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">period</span>
+            </div>
+          </div>
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="b_rsiOn" checked><label for="b_rsiOn" style="color:var(--muted)">RSI</label>
+              <input id="b_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">(panel below)</span>
+            </div>
+          </div>
+          <div class="panel ind-card">
+            <div class="switch">
+              <input type="checkbox" id="b_rsiAlertOn" checked><label for="b_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+              <input id="b_rsiNear" type="number" min="0" value="2" class="field num-s" />
+              <span class="text-xs" style="color:var(--muted)">near</span>
+            </div>
+            <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
+          </div>
+        </div>
+
+        <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
+      </section>
+
+      <section class="panel p-4 md:p-5 mt-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base md:text-lg font-semibold">RSI (B)</h3>
+          <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="b_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
+        </div>
+        <div style="height:170px"><canvas id="b_chartRSI"></canvas></div>
+      </section>
+
+      <details class="panel p-4 md:p-5 mt-5" open>
+        <summary class="cursor-pointer font-semibold text-base">Transaction details (B)</summary>
+        <div class="mt-3">
+          <table class="tbl-compact">
+            <thead><tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr></thead>
+            <tbody id="b_log"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== RSI alert plugin (unchanged) ===== */
+const rsiAlertPlugin={id:'rsiAlert',afterDatasetsDraw(chart,args,opts){
+  if(!opts||!opts.enabled||!opts.rsi||!opts.rsi.length) return;
+  const m=chart.getDatasetMeta(0); if(!m||!m.data||!m.data.length) return; const ctx=chart.ctx;
+  const over=opts.over??70, under=opts.under??30, near=opts.near??2, off=opts.offsetPx??18;
+  const isOver=i=>opts.rsi[i]!=null&&opts.rsi[i]>=over-near, isUnder=i=>opts.rsi[i]!=null&&opts.rsi[i]<=under+near;
+  function draw(tst,col,dir){ let seg=[]; const stroke=()=>{ if(seg.length<2) return;
+    ctx.save(); ctx.strokeStyle='rgba(2,6,23,.9)'; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(seg[0].x,seg[0].y); for(let k=1;k<seg.length;k++) ctx.lineTo(seg[k].x,seg[k].y); ctx.stroke();
+    ctx.setLineDash([6,5]); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath();
+    ctx.moveTo(seg[0].x,seg[0].y); for(let k=1;k<seg.length;k++) ctx.lineTo(seg[k].x,seg[k].y); ctx.stroke(); ctx.restore();
+  };
+  for(let i=1;i<m.data.length;i++){ const p0=m.data[i-1].getProps(['x','y'],true), p1=m.data[i].getProps(['x','y'],true);
+    if(isFinite(p0.y)&&isFinite(p1.y)&&tst(i)){ const y0=p0.y+(dir==='above'?-off:off), y1=p1.y+(dir==='above'?-off:off);
+      if(!seg.length) seg.push({x:p0.x,y:y0}); seg.push({x:p1.x,y:y1}); } else if(seg.length){ stroke(); seg=[]; } }
+  if(seg.length) stroke(); }
+  draw(isOver,'#ef4444','above'); draw(isUnder,'#06b6d4','below');
+}}; Chart.register(rsiAlertPlugin);
+
+/* ===== Shared state & helpers ===== */
+let RAW=[], PRICE_MAP=null;
+const addDays=(d,x)=>{const t=new Date(d); t.setDate(t.getDate()+x); return t;}
+const addMonths=(d,x)=>{const t=new Date(d); t.setMonth(t.getMonth()+x); return t;}
+const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function compactUSD(x){ const abs=Math.abs(x), u=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
+  for(const k of u){ if(abs>=k.v) return '$'+(x/k.v).toFixed(abs>=1e9?2:1).replace(/\.0+$/,'')+k.s; }
+  return '$'+Number(x).toLocaleString('en-US',{maximumFractionDigits:0}); }
+function compactPercent(p){ const sign=p>=0?'+':'-'; const abs=Math.abs(p);
+  if(abs<1000) return `${sign}${fmt(abs,2)}%`;
+  const units=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
+  for(const u of units){ if(abs>=u.v) return `${sign}${fmt(abs/u.v,2)}${u.s}%`; }
+  return `${sign}${fmt(abs,0)}%`; }
+
+/* Normalize data (unchanged except number parsing for string) */
+function normalizeArray(arr){
+  if(Array.isArray(arr) && arr.length && typeof arr[0]==='object'){
+    if('date' in arr[0] && ('close' in arr[0] || 'Close' in arr[0] || 'priceUsd' in arr[0] || 'price' in arr[0])){
+      return arr.map(r=>{
+        const v = r.close ?? r.Close ?? r.priceUsd ?? r.price;
+        const price = typeof v==='string' ? Number(v.replace(/,/g,'')) : Number(v);
+        return {date:String(r.date).slice(0,10), close:price};
+      }).filter(r=>isFinite(r.close)&&r.close>0&&r.close<1e6)
+        .sort((a,b)=>a.date.localeCompare(b.date));
+    }
+  }
+  const out=[]; for(const row of arr){
+    const key=Object.keys(row)[0], val=row[key]; if(typeof val!=='string') continue;
+    const p=val.split(';').map(x=>x.trim()); let priceCandidate=null;
+    for(const token of p){ const v=Number(token.replace(/,/g,'')); if(isFinite(v)&&v>0&&v<1e6){ priceCandidate=v; break; } }
+    const iso=(p[p.length-1]||'').replace(/"/g,'').slice(0,10);
+    if(priceCandidate && /^\d{4}-\d{2}-\d{2}$/.test(iso)) out.push({date:iso, close:priceCandidate});
+  }
+  return out.sort((a,b)=>a.date.localeCompare(b.date));
+}
+function onDataLoaded(arr){
+  RAW = normalizeArray(arr);
+  if(!RAW.length) throw new Error('Could not read valid USD prices from file.');
+  PRICE_MAP = new Map(RAW.map(r=>[r.date,r.close]));
+  const minISO=RAW[0].date, maxISO=RAW[RAW.length-1].date;
+  document.getElementById('loadStatus').textContent = `Loaded ${RAW.length} rows • ${minISO} → ${maxISO}`;
+  WSA.setRangeInputs(minISO,maxISO); WSB.setRangeInputs(minISO,maxISO);
+  document.getElementById('a_runBtn').disabled=false; document.getElementById('b_runBtn').disabled=false;
+  document.getElementById('a_status').textContent='Ready.'; document.getElementById('b_status').textContent='Ready.';
+}
+
+/* File load */
+function handleFile(file){
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{ const parsed=JSON.parse(e.target.result); if(!Array.isArray(parsed)) throw new Error('JSON must be an array.'); onDataLoaded(parsed); }
+    catch(err){ document.getElementById('loadStatus').textContent='Read error: '+err.message;
+      document.getElementById('a_runBtn').disabled=true; document.getElementById('b_runBtn').disabled=true; }
+  }; reader.readAsText(file);
+}
+const drop=document.getElementById('drop');
+['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.add('drag');}));
+['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.remove('drag');}));
+drop.addEventListener('drop', e=>{ const f=e.dataTransfer.files?.[0]; if(f) handleFile(f); });
+document.getElementById('fileInput').addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) handleFile(f); });
+
+/* ===== DCA core ===== */
+function nextAvail(dateStr,lastStr){ let d=new Date(dateStr), end=new Date(lastStr);
+  while(d<=end){ const s=d.toISOString().slice(0,10); if(PRICE_MAP.has(s)) return s; d=addDays(d,1); } return null; }
+function buildSchedule(freq,startStr,endStr){
+  const dates=[]; if(freq==='daily'){ let d=new Date(startStr), e=new Date(endStr);
+    while(d<=e){ const s=nextAvail(d.toISOString().slice(0,10),endStr); if(!s) break; dates.push(s); d=addDays(d,1); } }
+  else if(freq==='weekly'){ let d=new Date(startStr), e=new Date(endStr);
+    while(d<=e){ const s=nextAvail(d.toISOString().slice(0,10),endStr); if(!s) break; dates.push(s); d=addDays(d,7); } }
+  else { let d=new Date(startStr), e=new Date(endStr);
+    while(d<=e){ const s=nextAvail(d.toISOString().slice(0,10),endStr); if(!s) break; dates.push(s); d=addMonths(d,1); } }
+  return [...new Set(dates)];
+}
+function sliceRange(fromISO,toISO){ return RAW.filter(r=> r.date>=fromISO && r.date<=toISO ); }
+function runDCA(series,freq,amount,sISO,eISO){
+  const schedule=buildSchedule(freq,sISO,eISO), set=new Set(schedule);
+  let btc=0, invested=0; const log=[], port=[], invS=[];
+  for(const p of series){
+    if(set.has(p.date)){ const qty=amount/p.close; btc+=qty; invested+=amount; const val=btc*p.close;
+      log.push({date:p.date, price:p.close, usd:amount, totalInvested:invested, value:val}); }
+    invS.push({date:p.date, invested}); port.push({date:p.date, price:p.close, value:btc*p.close, invested});
+  }
+  const last=series[series.length-1].close;
+  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, value:btc*last,
+           firstBuyDate:schedule[0]||null, logRows:log, portfolioSeries:port, investedSeries:invS };
+}
+function calcLumpSum(invested,firstBuyDate,lastPrice){
+  const entry=PRICE_MAP.get(firstBuyDate); if(!entry) return null; const qty=invested/entry; return {entryPrice:entry, btc:qty, value:qty*lastPrice};
+}
+
+/* Indicators */
+const SMA=(arr,p)=>{const out=new Array(arr.length).fill(null); let s=0; for(let i=0;i<arr.length;i++){ s+=arr[i]; if(i>=p) s-=arr[i-p]; if(i>=p-1) out[i]=s/p; } return out; };
+function EMA(arr,p){ const out=new Array(arr.length).fill(null); const k=2/(p+1); let prev=null;
+  for(let i=0;i<arr.length;i++){ const v=arr[i]; if(i===p-1){ let s=0; for(let j=i-p+1;j<=i;j++) s+=arr[j]; prev=s/p; out[i]=prev; continue; }
+    if(i>=p){ prev=v*k+prev*(1-k); out[i]=prev; } } return out; }
+function RSI(arr,p=14){ if(arr.length<p+1) return new Array(arr.length).fill(null);
+  const out=new Array(arr.length).fill(null); let g=0,l=0;
+  for(let i=1;i<=p;i++){ const c=arr[i]-arr[i-1]; if(c>=0) g+=c; else l-=c; } let ag=g/p, al=l/p; out[p]= al===0?100:100-(100/(1+ag/al));
+  for(let i=p+1;i<arr.length;i++){ const c=arr[i]-arr[i-1]; const gp=c>0?c:0, lp=c<0?-c:0; ag=(ag*(p-1)+gp)/p; al=(al*(p-1)+lp)/p; out[i]= al===0?100:100-(100/(1+ag/al)); } return out; }
+
+/* Workspace factory (v1.3: add Flatpickr) */
+function createWorkspace(prefix){
+  const el=id=>document.getElementById(prefix+'_'+id);
+  const ws={
+    chartMain:null, chartRSI:null, fpStart:null, fpEnd:null,
+    get frequency(){ return el('frequency').value; },
+    get amount(){ return Math.max(1, Number(el('amount').value||0)); },
+    get sISO(){ return el('startDate').value; },
+    get eISO(){ return el('endDate').value; },
+    get maOn(){ return el('maOn').checked; }, get emaOn(){ return el('emaOn').checked; },
+    get rsiOn(){ return el('rsiOn').checked; }, get rsiAlertOn(){ return el('rsiAlertOn').checked; },
+    get maP(){ return clamp(Number(el('maPeriod').value||50),2,5000); },
+    get emaP(){ return clamp(Number(el('emaPeriod').value||200),2,5000); },
+    get rsiP(){ return clamp(Number(el('rsiPeriod').value||14),2,5000); },
+    get rsiNear(){ return clamp(Number(el('rsiNear').value||2),0,10); },
+
+    ensurePickers(){
+      if(!this.fpStart){ this.fpStart = flatpickr(el('startDate'), {dateFormat:'Y-m-d', allowInput:true}); }
+      if(!this.fpEnd){   this.fpEnd   = flatpickr(el('endDate'),   {dateFormat:'Y-m-d', allowInput:true}); }
+    },
+
+    setRangeInputs(minISO,maxISO){
+      this.ensurePickers();
+      this.fpStart.set('minDate',minISO); this.fpStart.set('maxDate',maxISO); this.fpStart.setDate(minISO, true);
+      this.fpEnd.set('minDate',minISO);   this.fpEnd.set('maxDate',maxISO);   this.fpEnd.setDate(maxISO, true);
+      el('rangeHint').textContent=`Data range: ${minISO} → ${maxISO}. Choose any dates within.`;
+    },
+
+    computeIndicators(series){
+      const priceArray=series.map(s=>s.price);
+      return { ma:this.maOn?SMA(priceArray,this.maP):null,
+               ema:this.emaOn?EMA(priceArray,this.emaP):null,
+               rsi:this.rsiOn?RSI(priceArray,this.rsiP):null };
+    },
+
+    renderCharts(series, investedSeries, indicators){
+      if(this.chartMain) this.chartMain.destroy();
+      if(this.chartRSI)  this.chartRSI.destroy();
+
+      const labels   = series.map(p=>p.date);
+      const price    = series.map(p=>p.price);
+      const value    = series.map(p=>p.value);
+      const invested = investedSeries.map(p=>p.invested);
+
+      const datasets = [
+        { label:'BTC price (USD)', data:price, yAxisID:'y',  borderColor:'#22c55e', pointRadius:0, tension:.25, borderWidth:2,   cubicInterpolationMode:'monotone', spanGaps:true },
+        { label:'Portfolio value (USD)', data:value, yAxisID:'y1', borderColor:'#60a5fa', pointRadius:0, tension:.25, borderWidth:1.6, cubicInterpolationMode:'monotone', spanGaps:true },
+        { label:'Total contribution (USD)', data:invested, yAxisID:'y1', borderColor:'rgba(59,130,246,0)', backgroundColor:'rgba(59,130,246,.18)', fill:true, pointRadius:0, tension:.2, borderWidth:0.01 }
+      ];
+      if(indicators.ma)  datasets.push({ label:`SMA (${this.maP})`, data:indicators.ma,  yAxisID:'y', borderColor:'#fbbf24', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
+      if(indicators.ema) datasets.push({ label:`EMA (${this.emaP})`, data:indicators.ema, yAxisID:'y', borderColor:'#e879f9', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
+
+      const ctxMain=document.getElementById(prefix+'_chartMain').getContext('2d');
+      this.chartMain=new Chart(ctxMain,{
+        type:'line',
+        data:{ labels, datasets },
+        options:{
+          responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+          scales:{
+            y :{ position:'left',  grid:{ color:'rgba(148,163,184,.15)' }, ticks:{ callback:v=>compactUSD(v) } },
+            y1:{ position:'right', grid:{ drawOnChartArea:false },      ticks:{ callback:v=>compactUSD(v) } },
+            x :{ grid:{ color:'rgba(148,163,184,.08)' }, ticks:{ maxTicksLimit:10 } }
+          },
+          plugins:{
+            legend:{ labels:{ color:'#cbd5e1', font:{ size:11 } } },
+            tooltip:{
+              backgroundColor:'#0f172a', borderColor:'#2b3a58', borderWidth:1, padding:10,
+              callbacks:{
+                title:items => items[0].label,
+                label: ctx => `${ctx.dataset.label}: ${compactUSD(ctx.parsed.y)}`,
+                afterBody: items => {
+                  try{
+                    const c = items[0].chart, i = items[0].dataIndex;
+                    const val = c.data.datasets[1].data[i];
+                    const inv = c.data.datasets[2].data[i];
+                    if(inv>0){ const pct=(val/inv-1)*100; return `\nPerformance on this date: ${(pct>=0?'+':'')}${fmt(pct,2)}%`; }
+                  }catch(e){}
+                  return '';
+                }
+              }
+            },
+            rsiAlert:{ enabled:this.rsiAlertOn, rsi:(indicators.rsi||[]), over:70, under:30, near:this.rsiNear, offsetPx:18 }
+          }
+        }
+      });
+
+      const ctxRsi=document.getElementById(prefix+'_chartRSI').getContext('2d');
+      const rsiData = indicators.rsi || new Array(labels.length).fill(null);
+      document.getElementById(prefix+'_rsiLegend').textContent=this.rsiP;
+
+      this.chartRSI=new Chart(ctxRsi,{
+        type:'line',
+        data:{
+          labels,
+          datasets:[
+            { label:`RSI (${this.rsiP})`, data:rsiData, borderColor:'#f97316', pointRadius:0, borderWidth:1.6, tension:0.2, spanGaps:true },
+            { label:'OB 70', data:new Array(labels.length).fill(70), borderColor:'rgba(239,68,68,.35)', borderDash:[6,6], pointRadius:0, borderWidth:1 },
+            { label:'OS 30', data:new Array(labels.length).fill(30), borderColor:'rgba(6,182,212,.35)',  borderDash:[6,6], pointRadius:0, borderWidth:1 }
+          ]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false, interaction:{ mode:'index', intersect:false },
+          scales:{
+            y:{ min:0, max:100, ticks:{ color:'#9aa4b2' }, grid:{ color:'rgba(148,163,184,.12)' } },
+            x:{ grid:{ color:'rgba(148,163,184,.08)' }, ticks:{ maxTicksLimit:10 } }
+          },
+          plugins:{ legend:{ labels:{ color:'#cbd5e1', font:{ size:11 } } } }
+        }
+      });
+    }, // end renderCharts
+
+    updateKPI(r,ls){
+      const invested=r.invested, value=r.value, pnlPct=invested>0?(value/invested-1)*100:0;
+      el('k_trades').textContent=fmt(r.scheduleCount,0);
+      el('k_invested').textContent=compactUSD(invested);
+      el('k_btc').textContent=fmt(r.btc,3);
+      el('k_avg').textContent=r.avgCost?compactUSD(r.avgCost):'-';
+      el('k_value').textContent=compactUSD(value);
+      el('k_pnl').textContent=compactPercent(pnlPct);
+      if(ls){ const lsPct=invested>0?(ls.value/invested-1)*100:0; el('k_vsls').textContent=compactPercent(pnlPct-lsPct); }
+      else{ el('k_vsls').textContent='—'; }
+
+      const tbody=el('log'); tbody.innerHTML='';
+      r.logRows.forEach((row,i)=>{
+        const investedCum=row.totalInvested, val=row.value, pnlAbs=val-investedCum, pnlPctRow=investedCum>0?(val/investedCum-1)*100:0;
+        const tr=document.createElement('tr'); tr.innerHTML=
+          `<td>${i+1}</td><td>${row.date}</td><td>${compactUSD(row.price)}</td>
+           <td>${compactUSD(investedCum)}</td><td>${compactUSD(val)}</td>
+           <td class="${pnlAbs>=0?'gain':'loss'}">${pnlAbs>=0?'+':''}${compactUSD(pnlAbs)}</td>
+           <td class="${pnlPctRow>=0?'gain':'loss'}">${pnlPctRow>=0?'+':''}${fmt(pnlPctRow,2)}%</td>`;
+        tbody.appendChild(tr);
+      });
+    },
+
+    run(){
+      if(!RAW.length){ document.getElementById(prefix+'_status').textContent='No data loaded.'; return; }
+      const sISO=this.sISO, eISO=this.eISO;
+      if(!sISO || !eISO || sISO>eISO){ document.getElementById(prefix+'_status').textContent='Invalid date range.'; return; }
+      const base=sliceRange(sISO,eISO);
+      if(base.length<5){ document.getElementById(prefix+'_status').textContent='Selected range is too short.'; return; }
+
+      const r=runDCA(base,this.frequency,this.amount,sISO,eISO);
+      const ls=r.firstBuyDate?calcLumpSum(r.invested,r.firstBuyDate,r.lastPrice):null;
+      const ind=this.computeIndicators(r.portfolioSeries);
+      this.renderCharts(r.portfolioSeries,r.investedSeries,ind);
+      this.updateKPI(r,ls);
+
+      document.getElementById(prefix+'_status').textContent=
+        `Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${r.scheduleCount}`;
+    },
+
+    refreshIndicatorsOnly(){
+      if(!this.chartMain) return;
+      const labels=this.chartMain.data.labels;
+      const series=labels.map((d,i)=>({date:d, price:this.chartMain.data.datasets[0].data[i], value:this.chartMain.data.datasets[1].data[i]}));
+      const invS=labels.map((d,i)=>({date:d, invested:this.chartMain.data.datasets[2].data[i]}));
+      const ind=this.computeIndicators(series); this.renderCharts(series,invS,ind);
+    },
+
+    reset(){
+      if(!RAW.length) return; const min=RAW[0].date, max=RAW[RAW.length-1].date;
+      el('frequency').value='weekly'; el('amount').value=100; this.ensurePickers(); this.fpStart.setDate(min,true); this.fpEnd.setDate(max,true);
+      el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
+      el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
+      document.getElementById(prefix+'_status').textContent='Ready.';
+      this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null;
+      el('k_trades').textContent='-'; el('k_invested').textContent='-'; el('k_btc').textContent='-'; el('k_avg').textContent='-';
+      el('k_value').textContent='-'; el('k_pnl').textContent='-'; el('k_vsls').textContent='-'; el('log').innerHTML='';
+    },
+
+    bind(){
+      const self=this;
+      this.ensurePickers();
+      document.getElementById(prefix+'_runBtn').addEventListener('click', ()=>self.run());
+      document.getElementById(prefix+'_resetBtn').addEventListener('click', ()=>self.reset());
+      ['maOn','emaOn','rsiOn','rsiAlertOn','maPeriod','emaPeriod','rsiPeriod','rsiNear'].forEach(id=>{
+        el(id).addEventListener('change', ()=>self.refreshIndicatorsOnly());
+      });
+    }
+  };
+  ws.bind(); return ws;
+}
+
+/* Copy & View controls */
+function copyBasic(from,to){
+  const ids=['frequency','amount','startDate','endDate'];
+  for(const k of ids){
+    const s=document.getElementById(from+'_'+k), d=document.getElementById(to+'_'+k);
+    if(!s||!d) continue; if(s.type==='checkbox') d.checked=s.checked; else d.value=s.value;
+  }
+}
+const WSA=createWorkspace('a'); const WSB=createWorkspace('b');
+document.getElementById('copyAtoB').addEventListener('click', ()=>copyBasic('a','b'));
+document.getElementById('copyBtoA').addEventListener('click', ()=>copyBasic('b','a'));
+
+const grid=document.getElementById('gridWrap');
+function setView(mode){ grid.classList.remove('two','focusA','focusB'); grid.classList.add(mode); }
+document.getElementById('focusA').addEventListener('click', ()=>setView('focusA'));
+document.getElementById('focusB').addEventListener('click', ()=>setView('focusB'));
+document.getElementById('splitView').addEventListener('click', ()=>setView('two'));
+</script>
+</body>
+</html>
