@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.1</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.2</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -91,6 +91,16 @@
     border:1px solid var(--stroke-2); color:var(--txt); box-shadow:none;
   }
 
+  .util-btn{
+    background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,0));
+    border:1px solid var(--stroke-2); color:var(--txt);
+    padding:.6rem .9rem; border-radius:14px; font-weight:600;
+    transition:.18s transform, .18s filter, .18s box-shadow;
+  }
+  .util-btn:hover{ transform:translateY(-1px) }
+  .util-btn:active{ transform:translateY(0) scale(.99) }
+  .util-btn.sm{ padding:.35rem .55rem; font-size:.72rem; }
+
   /* ---------- KPI ---------- */
   .kpi .label{ font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
   .kpi .value{ font-weight:800; font-size:1.06rem; white-space:nowrap }
@@ -116,7 +126,9 @@
   .ind-card{ background:transparent; border:0; padding:0; box-shadow:none; }
   .switch{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap }
   .switch input[type="checkbox"]{ width:1.05rem; height:1.05rem; accent-color:#22c55e; cursor:pointer; appearance:auto }
-  .num-s{ width:64px }
+  .ind-row .num-s{ width:76px }
+  .field .num-s{ width:80px }
+  .field .num-m{ width:120px }
 
   /* ---------- Dual grid ---------- */
   #gridWrap{ display:grid; gap:20px; transition:grid-template-columns .35s ease, gap .25s ease; grid-template-columns:minmax(0,1fr); }
@@ -143,7 +155,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.4.1</span>
+        <span class="chip">Dual v1.4.2</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
     </div>
@@ -166,12 +178,12 @@
   <!-- UTIL -->
   <section class="panel p-3.5 md:p-4 mb-5">
     <div class="flex flex-wrap gap-2 items-center">
-      <button id="copyAtoB" class="btn">Copy A → B</button>
-      <button id="copyBtoA" class="btn">Copy B → A</button>
+      <button id="copyAtoB" class="util-btn">Copy A → B</button>
+      <button id="copyBtoA" class="util-btn">Copy B → A</button>
       <span class="text-xs mx-1" style="color:var(--muted)">|</span>
-      <button id="focusA" class="btn ghost">Focus A</button>
-      <button id="focusB" class="btn ghost">Focus B</button>
-      <button id="splitView" class="btn">Split view</button>
+      <button id="focusA" class="util-btn">Focus A</button>
+      <button id="focusB" class="util-btn">Focus B</button>
+      <button id="splitView" class="util-btn">Split view</button>
       <span class="text-xs" style="color:var(--muted)">(Focus sẽ tạm ẩn 1 bên và mở rộng bên còn lại full width.)</span>
     </div>
   </section>
@@ -189,7 +201,7 @@
 
       <div class="chip mb-2">Controls</div>
       <section id="a_ctrl" class="controls panel p-4 md:p-5 mb-5">
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
+        <div class="flex flex-wrap gap-3 items-end mb-3">
           <div>
             <div class="label">Strategy</div>
             <div class="field">
@@ -211,16 +223,18 @@
           </div>
           <div class="cfg-dca">
             <div class="label">Amount (USD)</div>
-            <div class="field"><input id="a_amount" type="number" min="1" step="1" value="100" /></div>
+            <div class="field"><input id="a_amount" class="num-s" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
             <div class="label">Target Step (USD)</div>
-            <div class="field"><input id="a_targetStep" type="number" min="1" step="1" value="100" /></div>
+            <div class="field"><input id="a_targetStep" class="num-s" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
             <div class="label">Max (USD, Opt.)</div>
-            <div class="field"><input id="a_maxContrib" type="number" min="0" step="1" /></div>
+            <div class="field"><input id="a_maxContrib" class="num-m" type="number" min="0" step="1" /></div>
           </div>
+        </div>
+        <div class="flex flex-wrap gap-3 items-end">
           <div>
             <div class="label">Start date</div>
             <div class="field"><input id="a_startDate" type="text" placeholder="YYYY-MM-DD" /></div>
@@ -228,6 +242,12 @@
           <div>
             <div class="label">End date</div>
             <div class="field"><input id="a_endDate" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('a','1Y')">1Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('a','2Y')">2Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('a','5Y')">5Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('a','2015')">Since 2015</button>
           </div>
         </div>
         <p class="text-xs mt-3" id="a_rangeHint" style="color:var(--muted)">Select a date range.</p>
@@ -313,7 +333,7 @@
 
       <div class="chip mb-2">Controls</div>
       <section id="b_ctrl" class="controls panel p-4 md:p-5 mb-5">
-        <div class="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
+        <div class="flex flex-wrap gap-3 items-end mb-3">
           <div>
             <div class="label">Strategy</div>
             <div class="field">
@@ -335,16 +355,18 @@
           </div>
           <div class="cfg-dca">
             <div class="label">Amount (USD)</div>
-            <div class="field"><input id="b_amount" type="number" min="1" step="1" value="100" /></div>
+            <div class="field"><input id="b_amount" class="num-s" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
             <div class="label">Target Step (USD)</div>
-            <div class="field"><input id="b_targetStep" type="number" min="1" step="1" value="100" /></div>
+            <div class="field"><input id="b_targetStep" class="num-s" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
             <div class="label">Max (USD, Opt.)</div>
-            <div class="field"><input id="b_maxContrib" type="number" min="0" step="1" /></div>
+            <div class="field"><input id="b_maxContrib" class="num-m" type="number" min="0" step="1" /></div>
           </div>
+        </div>
+        <div class="flex flex-wrap gap-3 items-end">
           <div>
             <div class="label">Start date</div>
             <div class="field"><input id="b_startDate" type="text" placeholder="YYYY-MM-DD" /></div>
@@ -352,6 +374,12 @@
           <div>
             <div class="label">End date</div>
             <div class="field"><input id="b_endDate" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('b','1Y')">1Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('b','2Y')">2Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('b','5Y')">5Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('b','2015')">Since 2015</button>
           </div>
         </div>
         <p class="text-xs mt-3" id="b_rangeHint" style="color:var(--muted)">Select a date range.</p>
@@ -451,24 +479,29 @@ function updateChartTheme(ws){
   });
 }
 
-/* ===== RSI alert plugin (unchanged) ===== */
-const rsiAlertPlugin={id:'rsiAlert',afterDatasetsDraw(chart,args,opts){
-  if(!opts||!opts.enabled||!opts.rsi||!opts.rsi.length) return;
-  const m=chart.getDatasetMeta(0); if(!m||!m.data||!m.data.length) return; const ctx=chart.ctx;
-  const over=opts.over??70, under=opts.under??30, near=opts.near??2, off=opts.offsetPx??18;
-  const isOver=i=>opts.rsi[i]!=null&&opts.rsi[i]>=over-near, isUnder=i=>opts.rsi[i]!=null&&opts.rsi[i]<=under+near;
-  function draw(tst,col,dir){ let seg=[]; const stroke=()=>{ if(seg.length<2) return;
-    ctx.save(); ctx.strokeStyle='rgba(2,6,23,.9)'; ctx.lineWidth=5; ctx.lineJoin='round'; ctx.lineCap='round';
-    ctx.beginPath(); ctx.moveTo(seg[0].x,seg[0].y); for(let k=1;k<seg.length;k++) ctx.lineTo(seg[k].x,seg[k].y); ctx.stroke();
-    ctx.setLineDash([6,5]); ctx.strokeStyle=col; ctx.lineWidth=2; ctx.beginPath();
-    ctx.moveTo(seg[0].x,seg[0].y); for(let k=1;k<seg.length;k++) ctx.lineTo(seg[k].x,seg[k].y); ctx.stroke(); ctx.restore();
-  };
-  for(let i=1;i<m.data.length;i++){ const p0=m.data[i-1].getProps(['x','y'],true), p1=m.data[i].getProps(['x','y'],true);
-    if(isFinite(p0.y)&&isFinite(p1.y)&&tst(i)){ const y0=p0.y+(dir==='above'?-off:off), y1=p1.y+(dir==='above'?-off:off);
-      if(!seg.length) seg.push({x:p0.x,y:y0}); seg.push({x:p1.x,y:y1}); } else if(seg.length){ stroke(); seg=[]; } }
-  if(seg.length) stroke(); }
-  draw(isOver,'#ef4444','above'); draw(isUnder,'#06b6d4','below');
-}}; Chart.register(rsiAlertPlugin);
+/* ===== Plugins ===== */
+Chart.Tooltip.positioners.bottomRight=function(elems,eventPos){
+  const {chartArea}=this.chart; return{ x:chartArea.right-16, y:chartArea.bottom-16 };
+};
+const crosshairPlugin={id:'crosshair',afterDatasetsDraw(chart,args,opts){
+  if(!opts) return; const t=chart.tooltip; if(!t||!t.getActiveElements().length) return;
+  const {ctx,chartArea:{top,bottom,left,right}}=chart; const e=t.getActiveElements()[0];
+  const x=e.element.x, y=e.element.y, tc=themeColors();
+  ctx.save(); ctx.setLineDash([4,4]); ctx.strokeStyle=tc.tick; ctx.globalAlpha=.4;
+  ctx.beginPath(); ctx.moveTo(x,top); ctx.lineTo(x,bottom); ctx.moveTo(left,y); ctx.lineTo(right,y); ctx.stroke(); ctx.restore();
+}};
+const rsiAlertPlugin={id:'rsiAlert',beforeDatasetsDraw(chart,args,opts){
+  if(!opts||!opts.enabled||!opts.spans||!opts.spans.length) return;
+  const {ctx,chartArea:{top,bottom}}=chart; const m=chart.getDatasetMeta(0); if(!m||!m.data) return;
+  ctx.save();
+  for(const s of opts.spans){
+    const x0=m.data[s.x0].x;
+    const x1=m.data[Math.min(s.x1+1,m.data.length-1)].x;
+    ctx.fillStyle=s.color; ctx.fillRect(x0,top,x1-x0,bottom-top);
+  }
+  ctx.restore();
+}};
+Chart.register(crosshairPlugin,rsiAlertPlugin);
 
 /* ===== Shared state & helpers ===== */
 let RAW=[], PRICE_MAP=null;
@@ -693,6 +726,21 @@ function createWorkspace(prefix){
       if(indicators.ma)  datasets.push({ label:`SMA (${this.maP})`, data:indicators.ma,  yAxisID:'y', borderColor:'#fbbf24', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
       if(indicators.ema) datasets.push({ label:`EMA (${this.emaP})`, data:indicators.ema, yAxisID:'y', borderColor:'#e879f9', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
 
+      const rsiSpans=[];
+      if(this.rsiAlertOn && indicators.rsi){
+        const near=this.rsiNear||0;
+        const alpha=document.documentElement.dataset.theme==='light'?0.1:0.12;
+        const rsi=indicators.rsi;
+        let start=null,type=null;
+        for(let i=0;i<rsi.length;i++){
+          const v=rsi[i];
+          const curr=v!=null && (v>=70-near ? 'over' : v<=30+near ? 'under' : null);
+          if(curr){ if(start===null){ start=i; type=curr; } }
+          else if(start!==null){ rsiSpans.push({x0:start,x1:i-1,color:type==='over'?`rgba(255,0,0,${alpha})`:`rgba(0,180,0,${alpha})`}); start=null; type=null; }
+        }
+        if(start!==null) rsiSpans.push({x0:start,x1:rsi.length-1,color:type==='over'?`rgba(255,0,0,${alpha})`:`rgba(0,180,0,${alpha})`});
+      }
+
       const ctxMain=document.getElementById(prefix+'_chartMain').getContext('2d');
       this.chartMain=new Chart(ctxMain,{
         type:'line',
@@ -708,22 +756,31 @@ function createWorkspace(prefix){
           plugins:{
             legend:{ labels:{ color:tc.tick, font:{ size:11 } } },
             tooltip:{
+              position:'bottomRight',
               backgroundColor:'#0f172a', borderColor:'#2b3a58', borderWidth:1, padding:10,
+              filter:item=>item.datasetIndex<3,
               callbacks:{
                 title:items => items[0].label,
-                label: ctx => `${ctx.dataset.label}: ${compactUSD(ctx.parsed.y)}`,
+                label: ctx => {
+                  if(ctx.datasetIndex===0) return `BTC price (USD): ${compactUSD(ctx.parsed.y)}`;
+                  if(ctx.datasetIndex===2) return `Total contribution (USD): ${compactUSD(ctx.parsed.y)}`;
+                  if(ctx.datasetIndex===1) return `Portfolio value (USD): ${compactUSD(ctx.parsed.y)}`;
+                  return '';
+                },
                 afterBody: items => {
                   try{
-                    const c = items[0].chart, i = items[0].dataIndex;
-                    const val = c.data.datasets[1].data[i];
-                    const inv = c.data.datasets[2].data[i];
+                    const c=items[0].chart, i=items[0].dataIndex;
+                    const val=c.data.datasets[1].data[i];
+                    const inv=c.data.datasets[2].data[i];
                     if(inv>0){ const pct=(val/inv-1)*100; return `\nPerformance on this date: ${(pct>=0?'+':'')}${fmt(pct,2)}%`; }
+                    return `\nPerformance on this date: —`;
                   }catch(e){}
                   return '';
                 }
               }
             },
-            rsiAlert:{ enabled:this.rsiAlertOn, rsi:(indicators.rsi||[]), over:70, under:30, near:this.rsiNear, offsetPx:18 }
+            crosshair:true,
+            rsiAlert:{ enabled:this.rsiAlertOn, spans:rsiSpans }
           }
         }
       });
@@ -749,7 +806,7 @@ function createWorkspace(prefix){
             y:{ min:0, max:100, ticks:{ color:tc.tick }, grid:{ color:tc.gridStrong } },
             x:{ grid:{ color:tc.gridWeak, drawTicks:false }, ticks:{ color:tc.tick, maxTicksLimit:10, display:false } }
           },
-          plugins:{ legend:{ labels:{ color:tc.tick, font:{ size:11 } } } }
+          plugins:{ legend:{ labels:{ color:tc.tick, font:{ size:11 } } }, rsiAlert:{ enabled:this.rsiAlertOn, spans:rsiSpans } }
         }
       });
     }, // end renderCharts
@@ -879,11 +936,31 @@ const WSA=createWorkspace('a'); const WSB=createWorkspace('b');
 document.getElementById('copyAtoB').addEventListener('click', ()=>copyConfig('a','b'));
 document.getElementById('copyBtoA').addEventListener('click', ()=>copyConfig('b','a'));
 
+function getDataMeta(){
+  if(!RAW.length) return null;
+  return { firstDate:new Date(RAW[0].date), lastDate:new Date(RAW[RAW.length-1].date) };
+}
+function setDateInputs(prefix,start,end){
+  const ws=prefix==='a'?WSA:WSB; ws.ensurePickers();
+  ws.fpStart.setDate(start,true); ws.fpEnd.setDate(end,true);
+}
+function onDateChange(prefix){
+  const ws=prefix==='a'?WSA:WSB; ws.updateRangeHint(); debouncedMH();
+}
+function applyQuickRange(prefix,span){
+  const meta=getDataMeta(); if(!meta) return; const end=meta.lastDate; let start;
+  if(span==='2015'){ start=new Date(2015,0,1); }
+  else{ const n=+span[0]; start=new Date(end); start.setFullYear(end.getFullYear()-n); }
+  if(start<meta.firstDate) start=meta.firstDate;
+  setDateInputs(prefix,start,end); onDateChange(prefix);
+}
+
 document.getElementById('themeSwitch').addEventListener('click', ()=>{
   const next=document.documentElement.dataset.theme==='light'?'dark':'light';
   document.documentElement.dataset.theme=next;
   localStorage.theme=next;
   updateChartTheme(WSA); updateChartTheme(WSB);
+  WSA.refreshIndicatorsOnly(); WSB.refreshIndicatorsOnly();
   debouncedMH();
 });
 updateChartTheme(WSA); updateChartTheme(WSB);
