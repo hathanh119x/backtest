@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.3.0</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.3.3</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -44,7 +44,7 @@
   .field:focus-within{ border-color: rgba(var(--ring),.6); box-shadow: 0 0 0 4px rgba(var(--ring),.15) inset, 0 6px 20px rgba(0,0,0,.25); }
   .field input, .field select{
     background:transparent; border:none; outline:none; width:100%;
-    color:var(--txt); font-weight:600; font-size:.95rem; padding:.1rem 0;
+    color:var(--txt); font-weight:400; font-size:.95rem; padding:.1rem 0;
   }
   .field select{
     -webkit-appearance:none; appearance:none;
@@ -74,7 +74,9 @@
 
   /* ---------- Table ---------- */
   table{ width:100%; border-collapse:separate; border-spacing:0 }
-  th,td{ padding:.55rem .6rem; border-bottom:1px solid var(--stroke); white-space:nowrap; font-size:.8rem }
+  th,td{ padding:.55rem .6rem; border-bottom:1px solid var(--stroke); font-size:.8rem }
+  th{ white-space:normal; line-height:1.2 }
+  td{ white-space:nowrap }
   thead th{ color:var(--muted); font-weight:700; text-transform:uppercase; font-size:.68rem; letter-spacing:.04em; background:transparent }
   tbody tr:nth-child(odd){ background:#0e1626 }
   tbody tr:nth-child(even){ background:#0f1a2e }
@@ -87,10 +89,6 @@
   .switch{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap }
   .switch input[type="checkbox"]{ width:1.05rem; height:1.05rem; accent-color:#22c55e; cursor:pointer; appearance:auto }
   .num-s{ width:64px }
-
-  /* ---------- Drop ---------- */
-  .drop{ border:2px dashed var(--stroke-2); border-radius:16px; text-align:center; padding:14px; color:var(--muted); font-size:.95rem }
-  .drop.drag{ background:#101a33 }
 
   /* ---------- Dual grid ---------- */
   #gridWrap{ display:grid; gap:20px; transition:grid-template-columns .35s ease, gap .25s ease; grid-template-columns:minmax(0,1fr); }
@@ -117,7 +115,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.3.0</span>
+        <span class="chip">Dual v1.3.3</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
     </div>
@@ -125,16 +123,9 @@
 
   <!-- LOAD -->
   <section class="panel p-4 md:p-5 mb-4">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-end">
-      <div>
-        <div class="label">Select price file (JSON)</div>
-        <div class="field"><input id="fileInput" type="file" accept="application/json,.json" /></div>
-        <p class="text-xs mt-2" style="color:var(--muted)">Supported: <code>[{"date":"YYYY-MM-DD","close":123.45}, …]</code> or semicolon-joined rows (auto-detected).</p>
-      </div>
-      <div class="md:col-span-2">
-        <div id="drop" class="drop">Drag & drop the JSON file here</div>
-      </div>
-    </div>
+    <div class="label">Select price file (JSON)</div>
+    <div class="field"><input id="fileInput" type="file" accept="application/json,.json" /></div>
+    <p class="text-xs mt-2" style="color:var(--muted)">Supported: <code>[{"date":"YYYY-MM-DD","close":123.45}, …]</code> or semicolon-joined rows (auto-detected).</p>
     <p id="loadStatus" class="text-xs mt-3" style="color:var(--muted)">No data loaded.</p>
   </section>
 
@@ -156,7 +147,7 @@
     <div id="A">
       <h2 class="text-lg md:text-xl font-bold mb-3">Strategy A</h2>
 
-      <section class="panel p-4 md:p-5 mb-5">
+      <section id="a_ctrl" class="panel p-4 md:p-5 mb-5">
         <div class="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
           <div>
             <div class="label">Strategy</div>
@@ -182,24 +173,12 @@
             <div class="field"><input id="a_amount" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
-            <div class="label">Target step (USD/kỳ)</div>
+            <div class="label">Target step (USD/period)</div>
             <div class="field"><input id="a_targetStep" type="number" min="1" step="1" value="100" /></div>
-          </div>
-          <div class="cfg-va hidden">
-            <div class="label">Initial target (USD)</div>
-            <div class="field"><input id="a_initialTarget" type="number" min="0" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
             <div class="label">Max contribution (USD, optional)</div>
             <div class="field"><input id="a_maxContrib" type="number" min="0" step="1" /></div>
-          </div>
-          <div class="cfg-va hidden">
-            <div class="label">Carry shortfall</div>
-            <div class="field flex items-center justify-center"><input id="a_carryShort" type="checkbox" checked /></div>
-          </div>
-          <div class="cfg-va hidden">
-            <div class="label">Allow sells</div>
-            <div class="field flex items-center justify-center"><input id="a_allowSells" type="checkbox" /></div>
           </div>
           <div>
             <div class="label">Start date</div>
@@ -210,14 +189,14 @@
             <div class="field"><input id="a_endDate" type="text" placeholder="YYYY-MM-DD" /></div>
           </div>
           <div class="flex gap-2 col-span-2">
-            <button id="a_runBtn" class="btn w-full" disabled>Run backtest</button>
+            <button id="a_runBtn" class="btn w-full" disabled>Backtest</button>
             <button id="a_resetBtn" class="btn ghost" type="button">Reset</button>
           </div>
         </div>
         <p class="text-xs mt-3" id="a_rangeHint" style="color:var(--muted)">Load a JSON file to enable the date range.</p>
       </section>
 
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
+      <section id="a_kpi" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
         <div class="panel p-3.5"><div class="label">Buys</div><div id="a_k_trades" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">Total invested</div><div id="a_k_invested" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="a_k_btc" class="value mt-1">-</div></div>
@@ -228,13 +207,10 @@
       </section>
 
       <section id="a_vaRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi" style="display:none">
-        <div class="panel p-3.5"><div class="label">Target step</div><div id="a_k_targetStep" class="value mt-1">-</div></div>
-        <div class="panel p-3.5"><div class="label">Skipped periods</div><div id="a_k_skipped" class="value mt-1">-</div></div>
-        <div class="panel p-3.5"><div class="label">Shortfall</div><div id="a_k_shortfall" class="value mt-1">-</div></div>
-        <div class="panel p-3.5" id="a_k_grossWrap"><div class="label">Gross buys / sells</div><div id="a_k_gross" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Target step ($/period)</div><div id="a_k_targetStep" class="value mt-1">-</div></div>
       </section>
 
-      <section class="panel p-4 md:p-5">
+      <section id="a_chartWrap" class="panel p-4 md:p-5">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">Portfolio over time (A)</h3>
           <div id="a_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
@@ -276,7 +252,7 @@
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
 
-      <section class="panel p-4 md:p-5 mt-4">
+      <section id="a_rsiWrap" class="panel p-4 md:p-5 mt-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">RSI (A)</h3>
           <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="a_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
@@ -284,11 +260,11 @@
         <div style="height:170px"><canvas id="a_chartRSI"></canvas></div>
       </section>
 
-      <details class="panel p-4 md:p-5 mt-5" open>
+      <details id="a_logWrap" class="panel p-4 md:p-5 mt-5" open>
         <summary class="cursor-pointer font-semibold text-base">Transaction details (A)</summary>
         <div class="mt-3">
           <table class="tbl-compact">
-            <thead id="a_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr></thead>
+            <thead id="a_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr></thead>
             <tbody id="a_log"></tbody>
           </table>
         </div>
@@ -299,7 +275,7 @@
     <div id="B">
       <h2 class="text-lg md:text-xl font-bold mb-3">Strategy B</h2>
 
-      <section class="panel p-4 md:p-5 mb-5">
+      <section id="b_ctrl" class="panel p-4 md:p-5 mb-5">
         <div class="grid grid-cols-1 md:grid-cols-7 gap-3 items-end">
           <div>
             <div class="label">Strategy</div>
@@ -325,24 +301,12 @@
             <div class="field"><input id="b_amount" type="number" min="1" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
-            <div class="label">Target step (USD/kỳ)</div>
+            <div class="label">Target step (USD/period)</div>
             <div class="field"><input id="b_targetStep" type="number" min="1" step="1" value="100" /></div>
-          </div>
-          <div class="cfg-va hidden">
-            <div class="label">Initial target (USD)</div>
-            <div class="field"><input id="b_initialTarget" type="number" min="0" step="1" value="100" /></div>
           </div>
           <div class="cfg-va hidden">
             <div class="label">Max contribution (USD, optional)</div>
             <div class="field"><input id="b_maxContrib" type="number" min="0" step="1" /></div>
-          </div>
-          <div class="cfg-va hidden">
-            <div class="label">Carry shortfall</div>
-            <div class="field flex items-center justify-center"><input id="b_carryShort" type="checkbox" checked /></div>
-          </div>
-          <div class="cfg-va hidden">
-            <div class="label">Allow sells</div>
-            <div class="field flex items-center justify-center"><input id="b_allowSells" type="checkbox" /></div>
           </div>
           <div>
             <div class="label">Start date</div>
@@ -353,14 +317,14 @@
             <div class="field"><input id="b_endDate" type="text" placeholder="YYYY-MM-DD" /></div>
           </div>
           <div class="flex gap-2 col-span-2">
-            <button id="b_runBtn" class="btn w-full" disabled>Run backtest</button>
+            <button id="b_runBtn" class="btn w-full" disabled>Backtest</button>
             <button id="b_resetBtn" class="btn ghost" type="button">Reset</button>
           </div>
         </div>
         <p class="text-xs mt-3" id="b_rangeHint" style="color:var(--muted)">Load a JSON file to enable the date range.</p>
       </section>
 
-      <section class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
+      <section id="b_kpi" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi">
         <div class="panel p-3.5"><div class="label">Buys</div><div id="b_k_trades" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">Total invested</div><div id="b_k_invested" class="value mt-1">-</div></div>
         <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="b_k_btc" class="value mt-1">-</div></div>
@@ -371,13 +335,10 @@
       </section>
 
       <section id="b_vaRow" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5 kpi" style="display:none">
-        <div class="panel p-3.5"><div class="label">Target step</div><div id="b_k_targetStep" class="value mt-1">-</div></div>
-        <div class="panel p-3.5"><div class="label">Skipped periods</div><div id="b_k_skipped" class="value mt-1">-</div></div>
-        <div class="panel p-3.5"><div class="label">Shortfall</div><div id="b_k_shortfall" class="value mt-1">-</div></div>
-        <div class="panel p-3.5" id="b_k_grossWrap"><div class="label">Gross buys / sells</div><div id="b_k_gross" class="value mt-1">-</div></div>
+        <div class="panel p-3.5"><div class="label">Target step ($/period)</div><div id="b_k_targetStep" class="value mt-1">-</div></div>
       </section>
 
-      <section class="panel p-4 md:p-5">
+      <section id="b_chartWrap" class="panel p-4 md:p-5">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">Portfolio over time (B)</h3>
           <div id="b_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
@@ -419,7 +380,7 @@
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
 
-      <section class="panel p-4 md:p-5 mt-4">
+      <section id="b_rsiWrap" class="panel p-4 md:p-5 mt-4">
         <div class="flex items-center justify-between mb-2">
           <h3 class="text-base md:text-lg font-semibold">RSI (B)</h3>
           <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="b_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
@@ -427,11 +388,11 @@
         <div style="height:170px"><canvas id="b_chartRSI"></canvas></div>
       </section>
 
-      <details class="panel p-4 md:p-5 mt-5" open>
+      <details id="b_logWrap" class="panel p-4 md:p-5 mt-5" open>
         <summary class="cursor-pointer font-semibold text-base">Transaction details (B)</summary>
         <div class="mt-3">
           <table class="tbl-compact">
-            <thead id="b_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr></thead>
+            <thead id="b_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr></thead>
             <tbody id="b_log"></tbody>
           </table>
         </div>
@@ -516,10 +477,6 @@ function handleFile(file){
       document.getElementById('a_runBtn').disabled=true; document.getElementById('b_runBtn').disabled=true; }
   }; reader.readAsText(file);
 }
-const drop=document.getElementById('drop');
-['dragenter','dragover'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.add('drag');}));
-['dragleave','drop'].forEach(ev=>drop.addEventListener(ev,e=>{e.preventDefault(); drop.classList.remove('drag');}));
-drop.addEventListener('drop', e=>{ const f=e.dataTransfer.files?.[0]; if(f) handleFile(f); });
 document.getElementById('fileInput').addEventListener('change', e=>{ const f=e.target.files?.[0]; if(f) handleFile(f); });
 
 /* ===== DCA core ===== */
@@ -540,7 +497,7 @@ function runDCA(series,freq,amount,sISO,eISO){
   let btc=0, invested=0; const log=[], port=[], invS=[];
   for(const p of series){
     if(set.has(p.date)){ const qty=amount/p.close; btc+=qty; invested+=amount; const val=btc*p.close;
-      log.push({date:p.date, price:p.close, usd:amount, totalInvested:invested, value:val}); }
+      log.push({date:p.date, price:p.close, invested:amount, totalInvested:invested, value:val}); }
     invS.push({date:p.date, invested}); port.push({date:p.date, price:p.close, value:btc*p.close, invested});
   }
   const last=series[series.length-1].close;
@@ -549,55 +506,47 @@ function runDCA(series,freq,amount,sISO,eISO){
 }
 
 function runVA(series,freq,vaParams,sISO,eISO){
-  const {targetStep, initialTarget, maxContribution, carryShort, allowSells} = vaParams;
+  const {targetStep, maxContribution} = vaParams;
   const schedule=buildSchedule(freq,sISO,eISO);
   const set=new Set(schedule);
-  let btc=0, invested=0, carry=0, skipped=0, grossBuy=0, grossSell=0;
+  let btc=0, invested=0;
   let firstBuyDate=null;
   const log=[], port=[], invS=[];
   let t=0;
   for(const p of series){
     if(set.has(p.date)){
       t++;
-      const target=initialTarget + t*targetStep;
+      const target=t*targetStep;
       const valuePrev=btc*p.close;
-      let delta=target - valuePrev;
-      let buy=0, sell=0, action='Skip';
-      if(allowSells){
-        let desired=delta;
-        if(desired>0){
-          buy = maxContribution!=null?Math.min(desired,maxContribution):desired;
-          if(buy>0){ btc+=buy/p.close; invested+=buy; grossBuy+=buy; action='Buy'; if(!firstBuyDate) firstBuyDate=p.date; }
-        } else if(desired<0){
-          sell = Math.min(-desired, valuePrev);
-          if(sell>0){ btc-=sell/p.close; invested-=sell; grossSell+=sell; action='Sell'; }
-        }
-        carry=0;
-      } else {
-        let desired=delta + (carryShort?carry:0);
-        buy=Math.max(desired,0);
-        if(maxContribution!=null) buy=Math.min(buy,maxContribution);
-        if(buy>0){ btc+=buy/p.close; invested+=buy; grossBuy+=buy; action='Buy'; if(!firstBuyDate) firstBuyDate=p.date; }
-        else { if(delta<=0) skipped++; }
-        carry = carryShort?Math.max(0,desired-buy):0;
-      }
+      let buy=Math.max(0, target - valuePrev);
+      if(maxContribution!=null) buy=Math.min(buy, maxContribution);
+      if(buy>0){ btc+=buy/p.close; invested+=buy; if(!firstBuyDate) firstBuyDate=p.date; }
       const value=btc*p.close;
-      const deltaUSD=buy-sell;
-      const pnlAbs=value-invested;
-      const pnlPct=invested>0?(value/invested-1)*100:null;
-      log.push({date:p.date, price:p.close, target, action, deltaUSD, invested_cum:invested, value, pnl_abs:pnlAbs, pnl_pct:pnlPct});
+      log.push({date:p.date, price:p.close, invested:buy, totalInvested:invested, value});
     }
     invS.push({date:p.date, invested});
     port.push({date:p.date, price:p.close, value:btc*p.close, invested});
   }
   const last=series[series.length-1].close;
   return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, value:btc*last,
-           firstBuyDate:firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS,
-           skipped, shortfallFinal:carry, grossBuy, grossSell };
+           firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS };
 }
 function calcLumpSum(invested,firstBuyDate,lastPrice){
   const entry=PRICE_MAP.get(firstBuyDate); if(!entry) return null; const qty=invested/entry; return {entryPrice:entry, btc:qty, value:qty*lastPrice};
 }
+
+function equalizeSections(){
+  const pairs=[['a_ctrl','b_ctrl'],['a_kpi','b_kpi'],['a_chartWrap','b_chartWrap'],['a_rsiWrap','b_rsiWrap'],['a_logWrap','b_logWrap']];
+  pairs.forEach(([a,b])=>{
+    const elA=document.getElementById(a), elB=document.getElementById(b);
+    if(!elA || !elB){ return; }
+    elA.style.minHeight=''; elB.style.minHeight='';
+    if(elA.offsetParent===null || elB.offsetParent===null){ return; }
+    const h=Math.max(elA.offsetHeight, elB.offsetHeight);
+    elA.style.minHeight=h+'px'; elB.style.minHeight=h+'px';
+  });
+}
+window.addEventListener('resize', equalizeSections);
 
 /* Indicators */
 const SMA=(arr,p)=>{const out=new Array(arr.length).fill(null); let s=0; for(let i=0;i<arr.length;i++){ s+=arr[i]; if(i>=p) s-=arr[i-p]; if(i>=p-1) out[i]=s/p; } return out; };
@@ -620,10 +569,7 @@ function createWorkspace(prefix){
     get eISO(){ return el('endDate').value; },
     getType(){ return el('type').value; },
     getTargetStep(){ return Math.max(1, Number(el('targetStep').value||100)); },
-    getInitialTarget(){ return Math.max(0, Number(el('initialTarget').value||this.getTargetStep())); },
     getMaxContrib(){ const v=Number(el('maxContrib').value); return isFinite(v)&&v>0?v:null; },
-    getCarryShort(){ return el('carryShort').checked; },
-    getAllowSells(){ return el('allowSells').checked; },
     get maOn(){ return el('maOn').checked; }, get emaOn(){ return el('emaOn').checked; },
     get rsiOn(){ return el('rsiOn').checked; }, get rsiAlertOn(){ return el('rsiAlertOn').checked; },
     get maP(){ return clamp(Number(el('maPeriod').value||50),2,5000); },
@@ -736,9 +682,8 @@ function createWorkspace(prefix){
     updateKPI(r,ls,mode){
       const invested=r.invested, value=r.value;
       const pnlPct=invested>0?(value/invested-1)*100:null;
-      const buyCount=mode==='va'?r.logRows.filter(x=>x.action==='Buy').length:r.scheduleCount;
-      const sellCount=mode==='va'?r.logRows.filter(x=>x.action==='Sell').length:0;
-      el('k_trades').textContent = sellCount>0?`${fmt(buyCount,0)} (Sells: ${fmt(sellCount,0)})`:fmt(buyCount,0);
+      const buyCount=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
+      el('k_trades').textContent = fmt(buyCount,0);
       const kinv=el('k_invested'); kinv.textContent=compactUSD(invested); kinv.title='Net cashflow';
       el('k_btc').textContent=fmt(r.btc,3);
       el('k_avg').textContent=r.btc>0?compactUSD(r.avgCost):'—';
@@ -753,36 +698,20 @@ function createWorkspace(prefix){
       if(mode==='va'){
         vaRow.style.display='grid';
         el('k_targetStep').textContent=compactUSD(this.getTargetStep());
-        el('k_skipped').textContent=fmt(r.skipped||0,0);
-        el('k_shortfall').textContent=compactUSD(r.shortfallFinal||0);
-        if(this.getAllowSells()){ document.getElementById(prefix+'_k_grossWrap').style.display='block'; el('k_gross').textContent=`${compactUSD(r.grossBuy)} / ${compactUSD(r.grossSell)}`; }
-        else{ document.getElementById(prefix+'_k_grossWrap').style.display='none'; }
       } else { vaRow.style.display='none'; }
 
       const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
-      if(mode==='va'){
-        head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Target</th><th>Action</th><th>Δ invest (USD)</th><th>Cum. Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr>';
-        r.logRows.forEach((row,i)=>{
-          const pnlAbs=row.pnl_abs; const pnlPctRow=row.pnl_pct;
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${i+1}</td><td>${row.date}</td><td>${compactUSD(row.price)}</td><td>${compactUSD(row.target)}</td><td>${row.action}</td>`+
-                       `<td>${row.deltaUSD>=0?'+':''}${compactUSD(row.deltaUSD)}</td><td>${compactUSD(row.invested_cum)}</td><td>${compactUSD(row.value)}</td>`+
-                       `<td class="${pnlAbs>=0?'gain':'loss'}">${pnlAbs>=0?'+':''}${compactUSD(pnlAbs)}</td>`+
-                       `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`;
-          tbody.appendChild(tr);
-        });
-      } else {
-        head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr>';
-        r.logRows.forEach((row,i)=>{
-          const investedCum=row.totalInvested, val=row.value, pnlAbs=val-investedCum, pnlPctRow=investedCum>0?(val/investedCum-1)*100:null;
-          const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${i+1}</td><td>${row.date}</td><td>${compactUSD(row.price)}</td>`+
-                        `<td>${compactUSD(investedCum)}</td><td>${compactUSD(val)}</td>`+
-                        `<td class="${pnlAbs>=0?'gain':'loss'}">${pnlAbs>=0?'+':''}${compactUSD(pnlAbs)}</td>`+
-                        `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
+      head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr>';
+      r.logRows.forEach((row,i)=>{
+        const investedPer=row.invested, investedCum=row.totalInvested, val=row.value;
+        const pnlAbs=val-investedCum, pnlPctRow=investedCum>0?(val/investedCum-1)*100:null;
+        const tr=document.createElement('tr');
+        tr.innerHTML=`<td>${i+1}</td><td>${row.date}</td><td>${compactUSD(row.price)}</td>`+
+                     `<td>${compactUSD(investedPer)}</td><td>${compactUSD(investedCum)}</td><td>${compactUSD(val)}</td>`+
+                     `<td class="${pnlAbs>=0?'gain':'loss'}">${pnlAbs>=0?'+':''}${compactUSD(pnlAbs)}</td>`+
+                     `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`;
+        tbody.appendChild(tr);
+      });
     },
 
     run(){
@@ -795,7 +724,7 @@ function createWorkspace(prefix){
       const mode=this.getType();
       let r;
       if(mode==='va'){
-        const params={targetStep:this.getTargetStep(), initialTarget:this.getInitialTarget(), maxContribution:this.getMaxContrib(), carryShort:this.getCarryShort(), allowSells:this.getAllowSells()};
+        const params={targetStep:this.getTargetStep(), maxContribution:this.getMaxContrib()};
         r=runVA(base,this.frequency,params,sISO,eISO);
       } else {
         r=runDCA(base,this.frequency,this.amount,sISO,eISO);
@@ -805,10 +734,10 @@ function createWorkspace(prefix){
       this.renderCharts(r.portfolioSeries,r.investedSeries,ind);
       this.updateKPI(r,ls,mode);
 
-      const buys=mode==='va'?r.logRows.filter(x=>x.action==='Buy').length:r.scheduleCount;
-      const sells=mode==='va'?r.logRows.filter(x=>x.action==='Sell').length:0;
+      const buys=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
       document.getElementById(prefix+'_status').textContent=
-        `Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}${sells>0?`, Sells: ${sells}`:''}`;
+        `Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}`;
+      equalizeSections();
     },
 
     refreshIndicatorsOnly(){
@@ -822,7 +751,7 @@ function createWorkspace(prefix){
     reset(){
       if(!RAW.length) return; const min=RAW[0].date, max=RAW[RAW.length-1].date;
       el('type').value='dca'; this.toggleStrategy();
-      el('frequency').value='weekly'; el('amount').value=100; el('targetStep').value=100; el('initialTarget').value=100; el('maxContrib').value=''; el('carryShort').checked=true; el('allowSells').checked=false;
+      el('frequency').value='weekly'; el('amount').value=100; el('targetStep').value=100; el('maxContrib').value='';
       this.ensurePickers(); this.fpStart.setDate(min,true); this.fpEnd.setDate(max,true);
       el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
       el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
@@ -830,6 +759,7 @@ function createWorkspace(prefix){
       this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null;
       el('k_trades').textContent='-'; el('k_invested').textContent='-'; el('k_btc').textContent='-'; el('k_avg').textContent='-';
       el('k_value').textContent='-'; el('k_pnl').textContent='-'; el('k_vsls').textContent='-'; document.getElementById(prefix+'_vaRow').style.display='none'; el('log').innerHTML='';
+      equalizeSections();
     },
 
     bind(){
@@ -858,11 +788,9 @@ function copyConfig(from,to){
   if(type==='dca'){
     document.getElementById(to+'_amount').value=document.getElementById(from+'_amount').value;
   } else {
-    ['targetStep','initialTarget','maxContrib'].forEach(k=>{
+    ['targetStep','maxContrib'].forEach(k=>{
       const s=document.getElementById(from+'_'+k), d=document.getElementById(to+'_'+k); if(s&&d) d.value=s.value;
     });
-    document.getElementById(to+'_carryShort').checked=document.getElementById(from+'_carryShort').checked;
-    document.getElementById(to+'_allowSells').checked=document.getElementById(from+'_allowSells').checked;
   }
 }
 const WSA=createWorkspace('a'); const WSB=createWorkspace('b');
@@ -870,10 +798,11 @@ document.getElementById('copyAtoB').addEventListener('click', ()=>copyConfig('a'
 document.getElementById('copyBtoA').addEventListener('click', ()=>copyConfig('b','a'));
 
 const grid=document.getElementById('gridWrap');
-function setView(mode){ grid.classList.remove('two','focusA','focusB'); grid.classList.add(mode); }
+function setView(mode){ grid.classList.remove('two','focusA','focusB'); grid.classList.add(mode); equalizeSections(); }
 document.getElementById('focusA').addEventListener('click', ()=>setView('focusA'));
 document.getElementById('focusB').addEventListener('click', ()=>setView('focusB'));
 document.getElementById('splitView').addEventListener('click', ()=>setView('two'));
+equalizeSections();
 </script>
 </body>
 </html>
