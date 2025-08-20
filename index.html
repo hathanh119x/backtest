@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.1</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -143,7 +143,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.4</span>
+        <span class="chip">Dual v1.4.1</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
     </div>
@@ -256,44 +256,38 @@
               <div class="switch">
                 <input type="checkbox" id="a_maOn"><label for="a_maOn" style="color:var(--muted)">SMA</label>
                 <input id="a_maPeriod" type="number" min="2" value="50" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">period</span>
               </div>
             </div>
             <div class="ind-card">
               <div class="switch">
                 <input type="checkbox" id="a_emaOn"><label for="a_emaOn" style="color:var(--muted)">EMA</label>
                 <input id="a_emaPeriod" type="number" min="2" value="200" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">period</span>
               </div>
             </div>
             <div class="ind-card">
               <div class="switch">
                 <input type="checkbox" id="a_rsiOn" checked><label for="a_rsiOn" style="color:var(--muted)">RSI</label>
                 <input id="a_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">(panel below)</span>
               </div>
             </div>
             <div class="ind-card">
               <div class="switch">
                 <input type="checkbox" id="a_rsiAlertOn" checked><label for="a_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
                 <input id="a_rsiNear" type="number" min="0" value="2" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">near</span>
               </div>
-              <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
             </div>
           </div>
 
         <div style="height:420px"><canvas id="a_chartMain"></canvas></div>
+        <div class="rsi-embed mt-4" id="a_rsiEmbed">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm" style="color:var(--muted)">RSI (A)</div>
+            <div class="text-xs" style="color:var(--muted)"><span id="a_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
+          </div>
+          <div style="height:170px"><canvas id="a_chartRSI"></canvas></div>
+        </div>
 
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
-      </section>
-
-      <section id="a_rsiWrap" class="rsi-wrap panel p-4 md:p-5 mt-4">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-base md:text-lg font-semibold">RSI (A)</h3>
-          <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="a_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
-        </div>
-        <div style="height:170px"><canvas id="a_chartRSI"></canvas></div>
       </section>
       <div class="chip mt-5 mb-2">Details</div>
       <details id="a_logWrap" class="details table-wrap panel p-4 md:p-5" open>
@@ -386,44 +380,38 @@
               <div class="switch">
                 <input type="checkbox" id="b_maOn"><label for="b_maOn" style="color:var(--muted)">SMA</label>
                 <input id="b_maPeriod" type="number" min="2" value="50" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">period</span>
               </div>
             </div>
             <div class="ind-card">
               <div class="switch">
                 <input type="checkbox" id="b_emaOn"><label for="b_emaOn" style="color:var(--muted)">EMA</label>
                 <input id="b_emaPeriod" type="number" min="2" value="200" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">period</span>
               </div>
             </div>
             <div class="ind-card">
               <div class="switch">
                 <input type="checkbox" id="b_rsiOn" checked><label for="b_rsiOn" style="color:var(--muted)">RSI</label>
                 <input id="b_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">(panel below)</span>
               </div>
             </div>
             <div class="ind-card">
               <div class="switch">
                 <input type="checkbox" id="b_rsiAlertOn" checked><label for="b_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
                 <input id="b_rsiNear" type="number" min="0" value="2" class="field num-s" />
-                <span class="text-xs" style="color:var(--muted)">near</span>
               </div>
-              <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
             </div>
           </div>
 
         <div style="height:420px"><canvas id="b_chartMain"></canvas></div>
+        <div class="rsi-embed mt-4" id="b_rsiEmbed">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm" style="color:var(--muted)">RSI (B)</div>
+            <div class="text-xs" style="color:var(--muted)"><span id="b_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
+          </div>
+          <div style="height:170px"><canvas id="b_chartRSI"></canvas></div>
+        </div>
 
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
-      </section>
-
-      <section id="b_rsiWrap" class="rsi-wrap panel p-4 md:p-5 mt-4">
-        <div class="flex items-center justify-between mb-2">
-          <h3 class="text-base md:text-lg font-semibold">RSI (B)</h3>
-          <div class="text-xs md:text-sm" style="color:var(--muted)"><span id="b_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
-        </div>
-        <div style="height:170px"><canvas id="b_chartRSI"></canvas></div>
       </section>
       <div class="chip mt-5 mb-2">Details</div>
       <details id="b_logWrap" class="details table-wrap panel p-4 md:p-5" open>
@@ -615,7 +603,6 @@ function matchHeights(){
   mh('#A .controls', '#B .controls');
   mh('#A .results', '#B .results');
   mh('#A .chart-wrap','#B .chart-wrap');
-  mh('#A .rsi-wrap', '#B .rsi-wrap');
   mh('#A .details', '#B .details');
 }
 const debouncedMH = (()=>{ let t; return ()=>{ clearTimeout(t); t=setTimeout(matchHeights,150);} })();
@@ -716,7 +703,7 @@ function createWorkspace(prefix){
           scales:{
             y :{ position:'left',  grid:{ color:tc.gridStrong }, ticks:{ color:tc.tick, callback:v=>compactUSD(v) } },
             y1:{ position:'right', grid:{ color:tc.gridStrong, drawOnChartArea:false },      ticks:{ color:tc.tick, callback:v=>compactUSD(v) } },
-            x :{ grid:{ color:tc.gridWeak }, ticks:{ color:tc.tick, maxTicksLimit:10 } }
+            x :{ grid:{ color:tc.gridWeak, drawTicks:false }, ticks:{ color:tc.tick, maxTicksLimit:10, display:false } }
           },
           plugins:{
             legend:{ labels:{ color:tc.tick, font:{ size:11 } } },
@@ -760,7 +747,7 @@ function createWorkspace(prefix){
           animation:{ onComplete:debouncedMH },
           scales:{
             y:{ min:0, max:100, ticks:{ color:tc.tick }, grid:{ color:tc.gridStrong } },
-            x:{ grid:{ color:tc.gridWeak }, ticks:{ color:tc.tick, maxTicksLimit:10 } }
+            x:{ grid:{ color:tc.gridWeak, drawTicks:false }, ticks:{ color:tc.tick, maxTicksLimit:10, display:false } }
           },
           plugins:{ legend:{ labels:{ color:tc.tick, font:{ size:11 } } } }
         }
