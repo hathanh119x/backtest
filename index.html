@@ -50,9 +50,10 @@
     --row-odd:#f9fafb;
     --row-even:#f3f4f6;
     --chip-bg: rgba(229,231,235,.7);
+    --shadow: 0 8px 24px rgba(15,23,42,.08);
   }
   html,body{ background:var(--bg); color:var(--txt); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; font-size:14px; }
-  .panel{ background:linear-gradient(180deg, rgba(17,24,39,.6), rgba(10,15,26,.7));
+  .panel{ background: var(--panel);
           border:1px solid var(--stroke); border-radius:var(--radius); box-shadow:var(--shadow); }
   .chip{ font-size:.72rem; padding:.28rem .6rem; border-radius:999px; background:var(--chip-bg); border:1px solid var(--stroke-2); color:var(--muted) }
 
@@ -111,8 +112,8 @@
   html[data-theme="light"] #themeSwitch .knob{ transform:translateX(22px); }
 
   /* ---------- Indicators row ---------- */
-  .ind-row{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
-  .ind-card{ padding:12px 14px }
+  .ind-row{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; }
+  .ind-card{ background:transparent; border:0; padding:0; box-shadow:none; }
   .switch{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap }
   .switch input[type="checkbox"]{ width:1.05rem; height:1.05rem; accent-color:#22c55e; cursor:pointer; appearance:auto }
   .num-s{ width:64px }
@@ -128,7 +129,7 @@
   #gridWrap.two #A, #gridWrap.two #B { opacity:1; transform:none; pointer-events:auto; display:block; }
 
   /* ---------- Flatpickr Dark tune ---------- */
-  .flatpickr-calendar{ background:#0f172a; border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
+  .flatpickr-calendar{ background:var(--panel); border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
   .flatpickr-months .flatpickr-month{ color:var(--txt) }
   .flatpickr-day{ color:#d1d5db } .flatpickr-day.today{ border-color:#4f46e5 }
   .flatpickr-day.selected{ background:#2563eb; border-color:#2563eb }
@@ -250,37 +251,37 @@
           <h3 class="text-base md:text-lg font-semibold">Portfolio over time (A)</h3>
           <div id="a_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
         </div>
-        <div class="ind-row mb-3">
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_maOn"><label for="a_maOn" style="color:var(--muted)">SMA</label>
-              <input id="a_maPeriod" type="number" min="2" value="50" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
+          <div class="ind-row mb-3">
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_maOn"><label for="a_maOn" style="color:var(--muted)">SMA</label>
+                <input id="a_maPeriod" type="number" min="2" value="50" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_emaOn"><label for="a_emaOn" style="color:var(--muted)">EMA</label>
+                <input id="a_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_rsiOn" checked><label for="a_rsiOn" style="color:var(--muted)">RSI</label>
+                <input id="a_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">(panel below)</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_rsiAlertOn" checked><label for="a_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+                <input id="a_rsiNear" type="number" min="0" value="2" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">near</span>
+              </div>
+              <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
             </div>
           </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_emaOn"><label for="a_emaOn" style="color:var(--muted)">EMA</label>
-              <input id="a_emaPeriod" type="number" min="2" value="200" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_rsiOn" checked><label for="a_rsiOn" style="color:var(--muted)">RSI</label>
-              <input id="a_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">(panel below)</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_rsiAlertOn" checked><label for="a_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
-              <input id="a_rsiNear" type="number" min="0" value="2" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">near</span>
-            </div>
-            <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
-          </div>
-        </div>
 
         <div style="height:420px"><canvas id="a_chartMain"></canvas></div>
 
@@ -380,37 +381,37 @@
           <h3 class="text-base md:text-lg font-semibold">Portfolio over time (B)</h3>
           <div id="b_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
         </div>
-        <div class="ind-row mb-3">
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_maOn"><label for="b_maOn" style="color:var(--muted)">SMA</label>
-              <input id="b_maPeriod" type="number" min="2" value="50" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
+          <div class="ind-row mb-3">
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_maOn"><label for="b_maOn" style="color:var(--muted)">SMA</label>
+                <input id="b_maPeriod" type="number" min="2" value="50" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_emaOn"><label for="b_emaOn" style="color:var(--muted)">EMA</label>
+                <input id="b_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_rsiOn" checked><label for="b_rsiOn" style="color:var(--muted)">RSI</label>
+                <input id="b_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">(panel below)</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_rsiAlertOn" checked><label for="b_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+                <input id="b_rsiNear" type="number" min="0" value="2" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">near</span>
+              </div>
+              <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
             </div>
           </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_emaOn"><label for="b_emaOn" style="color:var(--muted)">EMA</label>
-              <input id="b_emaPeriod" type="number" min="2" value="200" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_rsiOn" checked><label for="b_rsiOn" style="color:var(--muted)">RSI</label>
-              <input id="b_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">(panel below)</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_rsiAlertOn" checked><label for="b_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
-              <input id="b_rsiNear" type="number" min="0" value="2" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">near</span>
-            </div>
-            <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
-          </div>
-        </div>
 
         <div style="height:420px"><canvas id="b_chartMain"></canvas></div>
 
