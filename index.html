@@ -29,10 +29,13 @@
     --radius: 14px;
     --shadow: 0 10px 30px rgba(0,0,0,.35);
   }
+  html[data-theme="light"]{
+    --shadow: 0 8px 24px rgba(15,23,42,.08);
+  }
   html,body{ background:var(--bg); color:var(--txt); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; font-size:14px; }
-  .panel{ background:linear-gradient(180deg, rgba(17,24,39,.6), rgba(10,15,26,.7));
+  .panel{ background:var(--panel);
           border:1px solid var(--stroke); border-radius:var(--radius); box-shadow:var(--shadow); }
-  .chip{ font-size:.72rem; padding:.28rem .6rem; border-radius:999px; background:rgba(15,23,42,.7); border:1px solid var(--stroke-2); color:var(--muted) }
+  .chip{ font-size:.72rem; padding:.28rem .6rem; border-radius:999px; background:var(--panel-2); border:1px solid var(--stroke-2); color:var(--muted) }
 
   /* ---------- Fields ---------- */
   .field{
@@ -77,14 +80,14 @@
   th,td{ padding:.55rem .6rem; border-bottom:1px solid var(--stroke); font-size:.8rem }
   td{ white-space:nowrap }
   table thead th{ white-space:normal; line-height:1.2; color:var(--muted); font-weight:700; text-transform:uppercase; font-size:.68rem; letter-spacing:.04em; background:transparent }
-  tbody tr:nth-child(odd){ background:#0e1626 }
-  tbody tr:nth-child(even){ background:#0f1a2e }
+  tbody tr:nth-child(odd){ background:var(--panel) }
+  tbody tr:nth-child(even){ background:var(--panel-2) }
   tbody tr:hover td{ filter:brightness(1.05) }
   .gain{ color:#22c55e; font-weight:600 } .loss{ color:#ef4444; font-weight:600 }
 
   /* ---------- Indicators row ---------- */
-  .ind-row{ display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
-  .ind-card{ padding:12px 14px }
+  .ind-row{ display:flex; flex-wrap:wrap; gap:12px; margin-bottom:12px; }
+  .ind-card{ background:transparent; border:0; padding:0; box-shadow:none; }
   .switch{ display:flex; align-items:center; gap:.5rem; flex-wrap:wrap }
   .switch input[type="checkbox"]{ width:1.05rem; height:1.05rem; accent-color:#22c55e; cursor:pointer; appearance:auto }
   .num-s{ width:64px }
@@ -100,7 +103,7 @@
   #gridWrap.two #A, #gridWrap.two #B { opacity:1; transform:none; pointer-events:auto; display:block; }
 
   /* ---------- Flatpickr Dark tune ---------- */
-  .flatpickr-calendar{ background:#0f172a; border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
+  .flatpickr-calendar{ background:var(--panel); border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
   .flatpickr-months .flatpickr-month{ color:var(--txt) }
   .flatpickr-day{ color:#d1d5db } .flatpickr-day.today{ border-color:#4f46e5 }
   .flatpickr-day.selected{ background:#2563eb; border-color:#2563eb }
@@ -213,37 +216,37 @@
         </div>
         <div style="height:420px"><canvas id="a_chartMain"></canvas></div>
 
-        <div class="ind-row mt-3">
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_maOn"><label for="a_maOn" style="color:var(--muted)">SMA</label>
-              <input id="a_maPeriod" type="number" min="2" value="50" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
+          <div class="ind-row mt-3">
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_maOn"><label for="a_maOn" style="color:var(--muted)">SMA</label>
+                <input id="a_maPeriod" type="number" min="2" value="50" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_emaOn"><label for="a_emaOn" style="color:var(--muted)">EMA</label>
+                <input id="a_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_rsiOn" checked><label for="a_rsiOn" style="color:var(--muted)">RSI</label>
+                <input id="a_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">(panel below)</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="a_rsiAlertOn" checked><label for="a_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+                <input id="a_rsiNear" type="number" min="0" value="2" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">near</span>
+              </div>
+              <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
             </div>
           </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_emaOn"><label for="a_emaOn" style="color:var(--muted)">EMA</label>
-              <input id="a_emaPeriod" type="number" min="2" value="200" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_rsiOn" checked><label for="a_rsiOn" style="color:var(--muted)">RSI</label>
-              <input id="a_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">(panel below)</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="a_rsiAlertOn" checked><label for="a_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
-              <input id="a_rsiNear" type="number" min="0" value="2" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">near</span>
-            </div>
-            <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
-          </div>
-        </div>
 
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
@@ -338,37 +341,37 @@
         </div>
         <div style="height:420px"><canvas id="b_chartMain"></canvas></div>
 
-        <div class="ind-row mt-3">
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_maOn"><label for="b_maOn" style="color:var(--muted)">SMA</label>
-              <input id="b_maPeriod" type="number" min="2" value="50" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
+          <div class="ind-row mt-3">
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_maOn"><label for="b_maOn" style="color:var(--muted)">SMA</label>
+                <input id="b_maPeriod" type="number" min="2" value="50" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_emaOn"><label for="b_emaOn" style="color:var(--muted)">EMA</label>
+                <input id="b_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">period</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_rsiOn" checked><label for="b_rsiOn" style="color:var(--muted)">RSI</label>
+                <input id="b_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">(panel below)</span>
+              </div>
+            </div>
+            <div class="ind-card">
+              <div class="switch">
+                <input type="checkbox" id="b_rsiAlertOn" checked><label for="b_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+                <input id="b_rsiNear" type="number" min="0" value="2" class="field num-s" />
+                <span class="text-xs" style="color:var(--muted)">near</span>
+              </div>
+              <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
             </div>
           </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_emaOn"><label for="b_emaOn" style="color:var(--muted)">EMA</label>
-              <input id="b_emaPeriod" type="number" min="2" value="200" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">period</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_rsiOn" checked><label for="b_rsiOn" style="color:var(--muted)">RSI</label>
-              <input id="b_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">(panel below)</span>
-            </div>
-          </div>
-          <div class="panel ind-card">
-            <div class="switch">
-              <input type="checkbox" id="b_rsiAlertOn" checked><label for="b_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
-              <input id="b_rsiNear" type="number" min="0" value="2" class="field num-s" />
-              <span class="text-xs" style="color:var(--muted)">near</span>
-            </div>
-            <p class="text-xs mt-1" style="color:var(--muted)">Draw slim lines when RSI near/beyond 70/30.</p>
-          </div>
-        </div>
 
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
@@ -627,6 +630,7 @@ function createWorkspace(prefix){
       if(indicators.ema) datasets.push({ label:`EMA (${this.emaP})`, data:indicators.ema, yAxisID:'y', borderColor:'#e879f9', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
 
       const ctxMain=document.getElementById(prefix+'_chartMain').getContext('2d');
+      const styles = getComputedStyle(document.documentElement);
       this.chartMain=new Chart(ctxMain,{
         type:'line',
         data:{ labels, datasets },
@@ -638,9 +642,10 @@ function createWorkspace(prefix){
             x :{ grid:{ color:'rgba(148,163,184,.08)' }, ticks:{ maxTicksLimit:10 } }
           },
           plugins:{
-            legend:{ labels:{ color:'#cbd5e1', font:{ size:11 } } },
+            legend:{ labels:{ color:styles.getPropertyValue('--muted').trim(), font:{ size:11 } } },
             tooltip:{
-              backgroundColor:'#0f172a', borderColor:'#2b3a58', borderWidth:1, padding:10,
+              backgroundColor:styles.getPropertyValue('--panel').trim(), borderColor:styles.getPropertyValue('--stroke').trim(), borderWidth:1, padding:10,
+              titleColor:styles.getPropertyValue('--txt').trim(), bodyColor:styles.getPropertyValue('--txt').trim(),
               callbacks:{
                 title:items => items[0].label,
                 label: ctx => `${ctx.dataset.label}: ${compactUSD(ctx.parsed.y)}`,
@@ -680,7 +685,7 @@ function createWorkspace(prefix){
             y:{ min:0, max:100, ticks:{ color:'#9aa4b2' }, grid:{ color:'rgba(148,163,184,.12)' } },
             x:{ grid:{ color:'rgba(148,163,184,.08)' }, ticks:{ maxTicksLimit:10 } }
           },
-          plugins:{ legend:{ labels:{ color:'#cbd5e1', font:{ size:11 } } } }
+          plugins:{ legend:{ labels:{ color:styles.getPropertyValue('--muted').trim(), font:{ size:11 } } } }
         }
       });
     }, // end renderCharts
