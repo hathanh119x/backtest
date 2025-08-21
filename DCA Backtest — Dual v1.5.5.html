@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.4</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.5</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +179,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.5.4</span>
+        <span class="chip">Dual v1.5.5</span>
         <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
@@ -1398,7 +1398,7 @@ function createWorkspaceC(prefix){
             responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
             animation:{onComplete:debouncedMH},
             scales:{
-              y:{min:0,max:100,ticks:{color:tc.tick},grid:{color:tc.gridStrong}},
+              y:{min:0,max:100,ticks:{display:false},grid:{color:tc.gridStrong},border:{display:false}},
               x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}
             },
             plugins:{tooltip:{enabled:false},legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}}
@@ -1421,8 +1421,8 @@ function createWorkspaceC(prefix){
             responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
             animation:{onComplete:debouncedMH},
             scales:{
-              y:{ticks:{color:tc.tick,callback:v=>compactUSD(v)},grid:{color:tc.gridStrong},suggestedMax:suggestedMax,suggestedMin:suggestedMin},
-              x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,display:false}}
+              y:{ticks:{display:false},grid:{color:tc.gridStrong},suggestedMin:suggestedMin,suggestedMax:suggestedMax,border:{display:false}},
+              x:{grid:{display:false,drawTicks:false},ticks:{display:false}}
             },
             plugins:{
               legend:{labels:{color:tc.tick,font:{size:11}}},
@@ -1438,12 +1438,13 @@ function createWorkspaceC(prefix){
     },
 
     updateKPI(r,ls){
-      const invested=r.invested;
-      const bank=r.bankFinal;
-      const portfolio=r.value;
-      const finalValue=(Number.isFinite(portfolio)?portfolio:0)+(Number.isFinite(bank)?bank:0);
-      const totalContrib=(Number.isFinite(invested)?invested:0)+(Number.isFinite(bank)?bank:0);
-      const pnlPct=totalContrib>0 && Number.isFinite(finalValue)?(finalValue/totalContrib-1)*100:null;
+      const invested=r.invested||0;
+      const proceeds=r.soldUSD||0;
+      const bank=r.bankFinal||0;
+      const portfolio=r.value||0;
+      const finalValue=portfolio+bank;
+      const userContrib=invested-proceeds+bank;
+      const pnlPct=userContrib>0?(finalValue/userContrib-1)*100:null;
       const buyCount=r.scheduleCount;
       const kdur=el('k_duration');
       if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate); else kdur.textContent='—';
@@ -1454,8 +1455,8 @@ function createWorkspaceC(prefix){
       const kval=el('k_value'); kval.textContent=Number.isFinite(finalValue)?compactUSD(finalValue):'—'; kval.title='Portfolio + bank (cash)';
       const kpnl=el('k_pnl');
       if(pnlPct!=null && Number.isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
-      else{ kpnl.textContent='—'; kpnl.title='Return undefined when invested ≤ 0'; }
-      if(ls){ const lsPct=pnlPct!=null && invested>0 && Number.isFinite(ls.value)?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&Number.isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
+      else{ kpnl.textContent='—'; kpnl.title='Return undefined when user contribution ≤ 0'; }
+      if(ls){ const lsPct=userContrib>0 && Number.isFinite(ls.value)?(ls.value/userContrib-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&Number.isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
       else{ el('k_vsls').textContent='—'; }
       el('k_bankFinal').textContent=Number.isFinite(r.bankFinal)?compactUSD(r.bankFinal):'—';
       el('k_bankMin').textContent=Number.isFinite(r.bankMin)?compactUSD(r.bankMin):'—';
@@ -1522,7 +1523,8 @@ function createWorkspaceC(prefix){
         return;
       }
       this.lastResult=r;
-      const ls=r.firstBuyDate?calcLumpSum(r.invested,r.firstBuyDate,r.lastPrice):null;
+      const userContrib=(r.invested||0)-(r.soldUSD||0)+(r.bankFinal||0);
+      const ls=r.firstBuyDate?calcLumpSum(userContrib,r.firstBuyDate,r.lastPrice):null;
       this.updateKPI(r,ls);
       try{
         const ind=this.computeIndicators(r.portfolioSeries);
