@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.10</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.1</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -127,6 +127,8 @@
   tbody tr:nth-child(even){ background:var(--row-even) }
   tbody tr:hover td{ filter:brightness(1.05) }
   .gain{ color:#22c55e; font-weight:600 } .loss{ color:#ef4444; font-weight:600 }
+  .sell{ color:#06b6d4; font-weight:600 }
+  .sell-dot{ width:6px; height:6px; border-radius:50%; background:#06b6d4; display:inline-block }
 
   /* ---------- Theme switch ---------- */
   #themeSwitch{ width:46px; height:24px; border-radius:999px; border:1px solid var(--stroke); background:var(--panel-2); position:relative; cursor:pointer; display:flex; align-items:center; justify-content:space-between; padding:0 6px; }
@@ -177,7 +179,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.4.10</span>
+        <span class="chip">Dual v1.5.1</span>
         <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
@@ -568,6 +570,75 @@
           </div>
         </div>
 
+        <div class="flex flex-wrap gap-3 items-end mb-3">
+          <div class="switch">
+            <input type="checkbox" id="c_sellEn"><label for="c_sellEn" style="color:var(--muted)">Sell enabled</label>
+          </div>
+          <div>
+            <div class="label">OB1</div>
+            <div class="field"><input id="c_ob1" class="num-s" type="number" value="72" /></div>
+          </div>
+          <div>
+            <div class="label">OB2</div>
+            <div class="field"><input id="c_ob2" class="num-s" type="number" value="78" /></div>
+          </div>
+          <div>
+            <div class="label">OB3</div>
+            <div class="field"><input id="c_ob3" class="num-s" type="number" value="84" /></div>
+          </div>
+          <div>
+            <div class="label">L1 %</div>
+            <div class="field"><input id="c_sL1" class="num-s" type="number" value="5" /></div>
+          </div>
+          <div>
+            <div class="label">L2 %</div>
+            <div class="field"><input id="c_sL2" class="num-s" type="number" value="10" /></div>
+          </div>
+          <div>
+            <div class="label">L3 %</div>
+            <div class="field"><input id="c_sL3" class="num-s" type="number" value="15" /></div>
+          </div>
+          <div>
+            <div class="label">Profit guard %</div>
+            <div class="field"><input id="c_profitGuard" class="num-s" type="number" value="4" /></div>
+          </div>
+          <div>
+            <div class="label">Min sell USD</div>
+            <div class="field"><input id="c_minSell" class="num-s" type="number" value="25" /></div>
+          </div>
+          <div>
+            <div class="label">Max sell/week</div>
+            <div class="field"><input id="c_maxSellW" class="num-s" type="number" value="2000" /></div>
+          </div>
+          <div>
+            <div class="label">Cooldown weeks</div>
+            <div class="field"><input id="c_coolW" class="num-s" type="number" value="1" /></div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 items-end mb-3">
+          <div>
+            <div class="label">Phase lookback</div>
+            <div class="field"><input id="c_phaseLB" class="num-s" type="number" value="20" /></div>
+          </div>
+          <div>
+            <div class="label">Phase cut up</div>
+            <div class="field"><input id="c_phaseCutUp" class="num-s" type="number" step="0.01" value="0.25" /></div>
+          </div>
+          <div>
+            <div class="label">Phase boost dn</div>
+            <div class="field"><input id="c_phaseBoostDn" class="num-s" type="number" step="0.01" value="0.35" /></div>
+          </div>
+          <div>
+            <div class="label">Bank reserve %</div>
+            <div class="field"><input id="c_bankReserve" class="num-s" type="number" value="30" /></div>
+          </div>
+          <div>
+            <div class="label">Bank cap</div>
+            <div class="field"><input id="c_bankCap" class="num-s" type="number" value="10" /></div>
+          </div>
+        </div>
+
         <div class="flex flex-wrap gap-3 items-end">
           <div>
             <div class="label">Start date</div>
@@ -604,6 +675,8 @@
           <div class="panel p-3.5"><div class="label">Bank (min)</div><div id="c_k_bankMin" class="value mt-1">-</div></div>
           <div class="panel p-3.5"><div class="label">Avg multiplier</div><div id="c_k_avgMult" class="value mt-1">-</div></div>
           <div class="panel p-3.5"><div class="label">At min / At max</div><div id="c_k_hits" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Sells (USD)</div><div id="c_k_sells" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Net invested</div><div id="c_k_net" class="value mt-1">-</div></div>
         </div>
       </section>
 
@@ -656,7 +729,7 @@
         <summary class="cursor-pointer font-semibold text-base">Transaction details (C)</summary>
         <div class="mt-3">
           <table class="tbl-compact">
-            <thead id="c_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr></thead>
+            <thead id="c_logHead"><tr><th>#</th><th>Date</th><th>Type</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr></thead>
             <tbody id="c_log"></tbody>
           </table>
         </div>
@@ -743,6 +816,10 @@ function alignRsi(main,rsi){
   rsi.options.layout.padding={left:ca.left,right:main.width-ca.right};
   rsi.update('none');
 }
+
+function detectPhase(i,series,emaArr,emaSlopeArr,rsiArr,params){
+  return {phase:'SIDE',phaseScore:0};
+}
 function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
 function setStatus(prefix,text){ const el=document.getElementById(prefix+'_status'); if(el) el.textContent=text; }
 function parseNumber(str){
@@ -754,8 +831,8 @@ function parseNumber(str){
 }
 
 const stateC={
-  paramsDraft:{base:100,min:50,max:300,overdraft:0,step:5},
-  params:{base:100,min:50,max:300,overdraft:0,step:5},
+  paramsDraft:{base:100,min:50,max:300,overdraft:0,step:5,sellEn:false,ob1:72,ob2:78,ob3:84,sL1:5,sL2:10,sL3:15,profitGuard:4,minSell:25,maxSellW:2000,coolW:1,phaseLB:20,phaseCutUp:0.25,phaseBoostDn:0.35,bankReserve:30,bankCap:10},
+  params:{base:100,min:50,max:300,overdraft:0,step:5,sellEn:false,ob1:72,ob2:78,ob3:84,sL1:5,sL2:10,sL3:15,profitGuard:4,minSell:25,maxSellW:2000,coolW:1,phaseLB:20,phaseCutUp:0.25,phaseBoostDn:0.35,bankReserve:30,bankCap:10},
   errors:{}
 };
 
@@ -809,6 +886,23 @@ function validateField(id){
     if(d.overdraft==null || d.overdraft<0) msgs.push('Overdraft must be ≥ 0');
   } else if(id==='step'){
     if(!(d.step>0)) msgs.push('Step must be > 0');
+  } else if(['ob1','ob2','ob3'].includes(id)){
+    if(d[id]==null) msgs.push('Required');
+    if(d.ob1!=null && d.ob2!=null && d.ob3!=null){
+      if(!(d.ob1<d.ob2 && d.ob2<d.ob3)) msgs.push('OB tiers must increase');
+    }
+  } else if(['sL1','sL2','sL3'].includes(id)){
+    if(d[id]==null) msgs.push('Required');
+    if(d[id]<0 || d[id]>50) msgs.push('0-50');
+  } else if(id==='profitGuard'){
+    if(d.profitGuard==null || d.profitGuard<0 || d.profitGuard>50) msgs.push('0-50');
+  } else if(id==='bankReserve'){
+    if(d.bankReserve==null || d.bankReserve<0 || d.bankReserve>90) msgs.push('0-90');
+  } else if(id==='minSell'){
+    if(d.minSell==null || d.minSell<10) msgs.push('≥10');
+    if(d.maxSellW!=null && d.minSell>d.maxSellW) msgs.push('≤ Max/week');
+  } else if(id==='maxSellW'){
+    if(d.maxSellW==null || d.maxSellW<d.minSell) msgs.push('≥ Min sell');
   }
   stateC.errors[id]=msgs;
   const input=document.getElementById('c_'+id);
@@ -833,12 +927,12 @@ function commitField(id){
 
 function validateAllC(){
   let ok=true;
-  ['min','base','max','overdraft','step'].forEach(id=>{ if(!validateField(id)) ok=false; });
+  ['min','base','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','bankReserve'].forEach(id=>{ if(!validateField(id)) ok=false; });
   updateBacktestDisabled();
   return ok;
 }
 
-['base','min','max','overdraft','step'].forEach(id=>{
+['base','min','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','coolW','phaseLB','phaseCutUp','phaseBoostDn','bankReserve','bankCap'].forEach(id=>{
   const el=document.getElementById('c_'+id);
   if(!el) return;
   stateC.paramsDraft[id]=parseNumber(el.value);
@@ -846,6 +940,13 @@ function validateAllC(){
   el.addEventListener('input',e=>{ stateC.paramsDraft[id]=parseNumber(e.target.value); validateField(id); updateBacktestDisabled(); });
   el.addEventListener('blur',()=>{ validateField(id); commitField(id); updateBacktestDisabled(); });
 });
+
+const sellEnEl=document.getElementById('c_sellEn');
+if(sellEnEl){
+  stateC.paramsDraft.sellEn=sellEnEl.checked;
+  stateC.params.sellEn=sellEnEl.checked;
+  sellEnEl.addEventListener('change',e=>{ stateC.paramsDraft.sellEn=e.target.checked; stateC.params.sellEn=e.target.checked; });
+}
 validateAllC();
 function compactUSD(x){ const abs=Math.abs(x), u=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
   for(const k of u){ if(abs>=k.v) return '$'+(x/k.v).toFixed(abs>=1e9?2:1).replace(/\.0+$/,'')+k.s; }
@@ -1222,6 +1323,9 @@ function createWorkspaceC(prefix){
       el('k_bankMin').textContent=Number.isFinite(r.bankMin)?compactUSD(r.bankMin):'—';
       el('k_avgMult').textContent=Number.isFinite(r.avgMultiplier)?fmt(r.avgMultiplier,2):'—';
       el('k_hits').textContent=(Number.isFinite(r.hitsMin)&&Number.isFinite(r.hitsMax))?`${r.hitsMin} / ${r.hitsMax}`:'—';
+      el('k_sells').textContent=Number.isFinite(r.soldUSD)?compactUSD(r.soldUSD):'—';
+      const netInv=(r.invested||0)-(r.soldUSD||0);
+      el('k_net').textContent=Number.isFinite(netInv)?compactUSD(netInv):'—';
 
       const ab=[['k_trades_ab',res=>{if(!res) return null; const c=res.scheduleCount!==undefined?res.scheduleCount:(res.logRows?res.logRows.filter(x=>x.invested>0).length:0); return fmt(c,0);}],
                 ['k_invested_ab',res=>res?compactUSD(res.invested):null],
@@ -1235,22 +1339,23 @@ function createWorkspaceC(prefix){
       });
 
       const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
-      head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr>';
-      const hasBuy=r.logRows.some(row=>row.invested>0);
-      if(!hasBuy){
+      head.innerHTML='<tr><th>#</th><th>Date</th><th>Type</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr>';
+      const hasTx=r.logRows && r.logRows.length;
+      if(!hasTx){
         const tr=document.createElement('tr');
-        tr.innerHTML='<td colspan="14" style="text-align:center;color:var(--muted)">No transactions</td>';
+        tr.innerHTML='<td colspan="15" style="text-align:center;color:var(--muted)">No transactions</td>';
         tbody.appendChild(tr);
       } else {
         r.logRows.forEach((row,i)=>{
-          if(row.invested<=0) return;
           const investedPer=row.invested;
           const investedCum=row.totalInvested;
           const val=row.value;
           const pnlAbs=(val!=null && investedCum!=null)?val-investedCum:null;
           const pnlPctRow=(val!=null && investedCum>0)?(val/investedCum-1)*100:null;
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${i+1}</td><td>${row.date||'—'}</td><td>${row.price!=null?compactUSD(row.price):'—'}</td>`+
+          const type=investedPer<0?'Sell':'Buy';
+          if(type==='Sell') tr.classList.add('sell');
+          tr.innerHTML=`<td>${i+1}</td><td>${row.date||'—'}</td><td>${type}</td><td>${row.price!=null?compactUSD(row.price):'—'}</td>`+
                        `<td>${investedPer!=null?compactUSD(investedPer):'—'}</td><td>${investedCum!=null?compactUSD(investedCum):'—'}</td><td>${val!=null?compactUSD(val):'—'}</td>`+
                        `<td class="${pnlAbs!=null?(pnlAbs>=0?'gain':'loss'):''}">${pnlAbs!=null?(pnlAbs>=0?'+':'')+compactUSD(pnlAbs):'—'}</td>`+
                        `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`+
@@ -1306,14 +1411,14 @@ function createWorkspaceC(prefix){
       if(!RAW.length) return; const min=RAW[0].date, max=RAW[RAW.length-1].date;
       el('freq').value='weekly'; el('base').value=100; el('min').value=50; el('max').value=300; el('overdraft').value=0; el('step').value=5;
       el('ema').value=50; el('rsi').value=14; el('sensTrend').value=0.08; el('sensCost').value=0.10; el('wTrend').value=0.5; el('wCost').value=0.3; el('wRsi').value=0.2; el('alpha').value=0.35; el('preset').value='standard';
-      ['base','min','max','overdraft','step'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); });
+      ['base','min','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','coolW','phaseLB','phaseCutUp','phaseBoostDn','bankReserve','bankCap'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); });
       updateBacktestDisabled();
       this.ensurePickers(); this.fpStart.setDate(min,true); this.fpEnd.setDate(max,true);
       el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
       el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
       setStatus(prefix,'Ready.');
       this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null;
-      ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_bankFinal','k_bankMin','k_avgMult','k_hits'].forEach(id=>{ el(id).textContent='-'; });
+      ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_bankFinal','k_bankMin','k_avgMult','k_hits','k_sells','k_net'].forEach(id=>{ el(id).textContent='-'; });
       ['k_trades_ab','k_invested_ab','k_btc_ab','k_avg_ab','k_value_ab','k_pnl_ab'].forEach(id=>{ el(id).textContent=''; });
       el('amtHint').textContent='';
       el('log').innerHTML='';
@@ -1332,7 +1437,7 @@ function createWorkspaceC(prefix){
         el('preset').addEventListener('change',()=>{
           const sel=el('preset').value; const key=sel.charAt(0).toUpperCase()+sel.slice(1);
           const cfg=WDCA_PRESETS[key];
-          if(cfg){ Object.entries(cfg).forEach(([k,v])=>{ const inp=getI(prefix,k); if(inp) setInputValue(inp,v); }); ['base','min','max','overdraft','step'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); }); updateBacktestDisabled(); }
+          if(cfg){ Object.entries(cfg).forEach(([k,v])=>{ const inp=getI(prefix,k); if(inp) setInputValue(inp,v); }); ['base','min','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','coolW','phaseLB','phaseCutUp','phaseBoostDn','bankReserve','bankCap'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); }); updateBacktestDisabled(); }
         });
       }
   };
