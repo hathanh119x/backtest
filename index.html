@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.2</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.x</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -136,9 +136,13 @@
     #gridWrap.two    { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
     #gridWrap.focusA { grid-template-columns: minmax(0,1fr); }
     #gridWrap.focusB { grid-template-columns: minmax(0,1fr); }
+    #gridWrap.wdca   { grid-template-columns: minmax(0,1fr); }
   }
   #gridWrap.focusA #B, #gridWrap.focusB #A { opacity:0; transform:translateX(10px); pointer-events:none; display:none; }
   #gridWrap.two #A, #gridWrap.two #B { opacity:1; transform:none; pointer-events:auto; display:block; }
+  #gridWrap.wdca #A, #gridWrap.wdca #B { display:none; opacity:0; pointer-events:none; }
+  #gridWrap.wdca #C { display:block; opacity:1; transform:none; pointer-events:auto; }
+  #gridWrap:not(.wdca) #C { display:none; }
 
   /* ---------- Flatpickr Dark tune ---------- */
   .flatpickr-calendar{ background:var(--panel); border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
@@ -155,7 +159,8 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.4.2</span>
+        <span class="chip">Dual v1.4.x</span>
+        <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
     </div>
@@ -183,6 +188,7 @@
       <span class="text-xs mx-1" style="color:var(--muted)">|</span>
       <button id="focusA" class="util-btn">Focus A</button>
       <button id="focusB" class="util-btn">Focus B</button>
+      <button id="btnWDCA" class="util-btn">WDCA</button>
       <button id="splitView" class="util-btn">Split view</button>
       <span class="text-xs" style="color:var(--muted)">(Focus sẽ tạm ẩn 1 bên và mở rộng bên còn lại full width.)</span>
     </div>
@@ -452,6 +458,200 @@
         </div>
       </details>
     </div>
+
+    <!-- Strategy C -->
+    <div id="C">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-lg md:text-xl font-bold">Strategy C</h2>
+        <div class="flex gap-2">
+          <button id="c_runBtn" class="btn" disabled>Backtest</button>
+          <button id="c_resetBtn" class="btn ghost" type="button">Reset</button>
+        </div>
+      </div>
+
+      <div class="chip mb-2">Controls</div>
+      <section id="c_ctrl" class="controls panel p-4 md:p-5 mb-5">
+        <div class="flex flex-wrap gap-3 items-end mb-3">
+          <div>
+            <div class="label">Repeat</div>
+            <div class="field">
+              <select id="c_freq">
+                <option value="daily">Daily</option>
+                <option value="weekly" selected>Weekly</option>
+                <option value="monthly">Monthly</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <div class="label">Base (USD)</div>
+            <div class="field"><input id="c_base" class="num-s" type="number" min="1" step="1" value="100" /></div>
+          </div>
+          <div>
+            <div class="label">Min (USD)</div>
+            <div class="field"><input id="c_min" class="num-s" type="number" min="1" step="1" value="50" /></div>
+          </div>
+          <div>
+            <div class="label">Max (USD)</div>
+            <div class="field"><input id="c_max" class="num-s" type="number" min="1" step="1" value="300" /></div>
+          </div>
+          <div>
+            <div class="label">Overdraft (USD)</div>
+            <div class="field"><input id="c_overdraft" class="num-s" type="number" min="0" step="1" value="0" /></div>
+          </div>
+          <div>
+            <div class="label">Step (USD)</div>
+            <div class="field"><input id="c_step" class="num-s" type="number" min="0" step="1" value="5" /></div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 items-end mb-3">
+          <div>
+            <div class="label">EMA period</div>
+            <div class="field"><input id="c_ema" class="num-s" type="number" min="2" step="1" value="50" /></div>
+          </div>
+          <div>
+            <div class="label">RSI period</div>
+            <div class="field"><input id="c_rsi" class="num-s" type="number" min="2" step="1" value="14" /></div>
+          </div>
+          <div>
+            <div class="label">Sens. trend</div>
+            <div class="field"><input id="c_sensTrend" class="num-s" type="number" step="0.01" value="0.08" /></div>
+          </div>
+          <div>
+            <div class="label">Sens. cost</div>
+            <div class="field"><input id="c_sensCost" class="num-s" type="number" step="0.01" value="0.10" /></div>
+          </div>
+          <div>
+            <div class="label">wTrend</div>
+            <div class="field"><input id="c_wTrend" class="num-s" type="number" step="0.01" value="0.5" /></div>
+          </div>
+          <div>
+            <div class="label">wCost</div>
+            <div class="field"><input id="c_wCost" class="num-s" type="number" step="0.01" value="0.3" /></div>
+          </div>
+          <div>
+            <div class="label">wRSI</div>
+            <div class="field"><input id="c_wRsi" class="num-s" type="number" step="0.01" value="0.2" /></div>
+          </div>
+          <div>
+            <div class="label">Alpha</div>
+            <div class="field"><input id="c_alpha" class="num-s" type="number" step="0.01" value="0.35" /></div>
+          </div>
+          <div>
+            <div class="label">Min ratio</div>
+            <div class="field"><input id="c_minRatio" class="num-s" type="number" step="0.01" value="0.5" /></div>
+          </div>
+          <div>
+            <div class="label">Max ratio</div>
+            <div class="field"><input id="c_maxRatio" class="num-s" type="number" step="0.01" value="3" /></div>
+          </div>
+          <div>
+            <div class="label">Preset</div>
+            <div class="field">
+              <select id="c_preset">
+                <option value="standard" selected>Standard</option>
+                <option value="conservative">Conservative</option>
+                <option value="aggressive">Aggressive</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex flex-wrap gap-3 items-end">
+          <div>
+            <div class="label">Start date</div>
+            <div class="field"><input id="c_start" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div>
+            <div class="label">End date</div>
+            <div class="field"><input id="c_end" type="text" placeholder="YYYY-MM-DD" /></div>
+          </div>
+          <div class="flex gap-2 ml-auto">
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('c','1Y')">1Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('c','2Y')">2Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('c','5Y')">5Y</button>
+            <button type="button" class="util-btn sm" onclick="applyQuickRange('c','2015')">Since 2015</button>
+          </div>
+        </div>
+        <p class="text-xs mt-3" id="c_rangeHint" style="color:var(--muted)">Select a date range.</p>
+      </section>
+
+      <div class="chip mb-2">Results</div>
+      <section id="c_kpi" class="results">
+        <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
+          <div class="panel p-3.5"><div class="label">Duration</div><div id="c_k_duration" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Buys</div><div id="c_k_trades" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Total invested</div><div id="c_k_invested" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="c_k_btc" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Average cost</div><div id="c_k_avg" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Final value</div><div id="c_k_value" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Return</div><div id="c_k_pnl" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="c_k_vsls" class="value mt-1">-</div></div>
+        </div>
+        <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <div class="panel p-3.5"><div class="label">Bank (final)</div><div id="c_k_bankFinal" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Bank (min)</div><div id="c_k_bankMin" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Avg multiplier</div><div id="c_k_avgMult" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">At min / At max</div><div id="c_k_hits" class="value mt-1">-</div></div>
+        </div>
+        <div id="c_compare" class="flex gap-2 flex-wrap justify-end mt-2"></div>
+      </section>
+
+      <div class="chip mb-2">Charts</div>
+      <section id="c_chartWrap" class="chart-wrap panel p-4 md:p-5">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-base md:text-lg font-semibold">Portfolio over time (C)</h3>
+          <div id="c_status" class="text-xs md:text-sm" style="color:var(--muted)">Awaiting data…</div>
+        </div>
+        <div class="ind-row mb-3">
+          <div class="ind-card">
+            <div class="switch">
+              <input type="checkbox" id="c_maOn"><label for="c_maOn" style="color:var(--muted)">SMA</label>
+              <input id="c_maPeriod" type="number" min="2" value="50" class="field num-s" />
+            </div>
+          </div>
+          <div class="ind-card">
+            <div class="switch">
+              <input type="checkbox" id="c_emaOn"><label for="c_emaOn" style="color:var(--muted)">EMA</label>
+              <input id="c_emaPeriod" type="number" min="2" value="200" class="field num-s" />
+            </div>
+          </div>
+          <div class="ind-card">
+            <div class="switch">
+              <input type="checkbox" id="c_rsiOn" checked><label for="c_rsiOn" style="color:var(--muted)">RSI</label>
+              <input id="c_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+            </div>
+          </div>
+          <div class="ind-card">
+            <div class="switch">
+              <input type="checkbox" id="c_rsiAlertOn" checked><label for="c_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
+              <input id="c_rsiNear" type="number" min="0" value="2" class="field num-s" />
+            </div>
+          </div>
+        </div>
+        <div style="height:420px"><canvas id="c_chartMain"></canvas></div>
+        <div class="rsi-embed mt-4" id="c_rsiEmbed">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm" style="color:var(--muted)">RSI (C)</div>
+            <div class="text-xs" style="color:var(--muted)"><span id="c_rsiLegend">14</span> by default – overbought 70, oversold 30</div>
+          </div>
+          <div style="height:170px"><canvas id="c_chartRSI"></canvas></div>
+        </div>
+
+        <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
+      </section>
+
+      <div class="chip mt-5 mb-2">Details</div>
+      <details id="c_logWrap" class="details table-wrap panel p-4 md:p-5" open>
+        <summary class="cursor-pointer font-semibold text-base">Transaction details (C)</summary>
+        <div class="mt-3">
+          <table class="tbl-compact">
+            <thead id="c_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr></thead>
+            <tbody id="c_log"></tbody>
+          </table>
+        </div>
+      </details>
+    </div>
   </div>
 </div>
 
@@ -625,6 +825,52 @@ function calcLumpSum(invested,firstBuyDate,lastPrice){
   const entry=PRICE_MAP.get(firstBuyDate); if(!entry) return null; const qty=invested/entry; return {entryPrice:entry, btc:qty, value:qty*lastPrice};
 }
 
+function runWDCA(series,freq,p,sISO,eISO){
+  const schedule=buildSchedule(freq,sISO,eISO);
+  const set=new Set(schedule);
+  const priceArr=series.map(r=>r.close);
+  const emaArr=EMA(priceArr,p.ema);
+  const rsiArr=RSI(priceArr,p.rsi);
+  const wSum=p.wTrend+p.wCost+p.wRsi;
+  let btc=0, invested=0, bank=0;
+  let firstBuyDate=null;
+  let bankMin=0, hitsMin=0, hitsMax=0, multSum=0, prevScore=0;
+  const log=[], port=[], invS=[];
+  const EPS=p.step>0?p.step*0.5:1e-9;
+  for(let i=0;i<series.length;i++){
+    const row=series[i]; const price=row.close; const date=row.date;
+    if(set.has(date)){
+      bank+=p.base;
+      const ema=emaArr[i];
+      const s1=ema? -Math.tanh(((price-ema)/ema)/p.sensTrend):0;
+      const avgCost=btc>0?invested/btc:null;
+      const s2=avgCost? -Math.tanh(((price-avgCost)/avgCost)/p.sensCost):0;
+      const rsi=rsiArr[i];
+      let s3=0; if(rsi!=null){ if(rsi<=30) s3=1; else if(rsi>=70) s3=-1; else s3=(50-rsi)/20; }
+      const scoreRaw=(p.wTrend*s1+p.wCost*s2+p.wRsi*s3)/wSum;
+      const score=clamp((1-p.alpha)*prevScore+p.alpha*scoreRaw,-1,1); prevScore=score;
+      let f=score>=0?1+score*(p.maxRatio-1):1+score*(1-p.minRatio);
+      let desired=clamp(f*p.base,p.min,p.max);
+      if(p.step>0) desired=Math.round(desired/p.step)*p.step;
+      let invest=Math.min(desired,bank+p.overdraft);
+      invest=Math.max(invest,p.min);
+      bank-=invest; if(bank<bankMin) bankMin=bank;
+      if(invest>0){ const qty=invest/price; btc+=qty; invested+=invest; if(!firstBuyDate) firstBuyDate=date; }
+      multSum+=invest/p.base;
+      if(Math.abs(invest-p.min)<=EPS) hitsMin++;
+      if(Math.abs(invest-p.max)<=EPS) hitsMax++;
+      const value=btc*price;
+      log.push({date, price, invested:invest, totalInvested:invested, value, score, s1, s2, s3, f, bank});
+    }
+    invS.push({date, invested});
+    port.push({date, price, value:btc*price, invested});
+  }
+  const lastEntry=series[series.length-1]; const last=lastEntry.close;
+  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastEntry.date, value:btc*last,
+           firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS,
+           bankFinal:bank, bankMin, avgMultiplier:schedule.length?multSum/schedule.length:0, hitsMin, hitsMax };
+}
+
 function mh(aSel,bSel){
   const a=document.querySelector(aSel), b=document.querySelector(bSel);
   if(!a||!b) return;
@@ -653,6 +899,7 @@ function RSI(arr,p=14){ if(arr.length<p+1) return new Array(arr.length).fill(nul
 
 /* Workspace factory (v1.3: add Flatpickr) */
 function createWorkspace(prefix){
+  if(prefix==='c') return createWorkspaceC(prefix);
   const el=id=>document.getElementById(prefix+'_'+id);
   const ws={
     chartMain:null, chartRSI:null, fpStart:null, fpEnd:null,
