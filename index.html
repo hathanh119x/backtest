@@ -157,6 +157,11 @@
   #gridWrap.wdca #C { display:block; opacity:1; transform:none; pointer-events:auto; }
   #gridWrap:not(.wdca) #C { display:none; }
 
+  .input-error{ border-color:#f87171 !important; }
+  .input-wrap{ position:relative; }
+  .field-tooltip{ position:absolute; z-index:50; background:#fff; color:#111; border:1px solid #f59e0b; border-radius:8px; padding:8px 10px; box-shadow:0 6px 16px rgba(0,0,0,.12); max-width:260px; font-size:.75rem; }
+  .field-tooltip a{ color:#2563eb; text-decoration:underline; cursor:pointer; }
+
   /* ---------- Flatpickr Dark tune ---------- */
   .flatpickr-calendar{ background:var(--panel); border:1px solid var(--stroke); box-shadow:var(--shadow); color:var(--txt); }
   .flatpickr-months .flatpickr-month{ color:var(--txt) }
@@ -497,23 +502,23 @@
           </div>
           <div>
             <div class="label">Base (USD)</div>
-            <div class="field"><input id="c_base" class="num-s" type="number" min="1" step="1" value="100" /></div>
+            <div class="field input-wrap"><input id="c_base" data-testid="c-base" class="num-s" type="text" value="100" /></div>
           </div>
           <div>
             <div class="label">Min (USD)</div>
-            <div class="field"><input id="c_min" class="num-s" type="number" min="1" step="1" value="50" /></div>
+            <div class="field input-wrap"><input id="c_min" data-testid="c-min" class="num-s" type="text" value="50" /></div>
           </div>
           <div>
             <div class="label">Max (USD)</div>
-            <div class="field"><input id="c_max" class="num-s" type="number" min="1" step="1" value="300" /></div>
+            <div class="field input-wrap"><input id="c_max" data-testid="c-max" class="num-s" type="text" value="300" /></div>
           </div>
           <div>
             <div class="label">Overdraft (USD)</div>
-            <div class="field"><input id="c_overdraft" class="num-s" type="number" min="0" step="1" value="0" /></div>
+            <div class="field input-wrap"><input id="c_overdraft" data-testid="c-overdraft" class="num-s" type="text" value="0" /></div>
           </div>
           <div>
             <div class="label">Step (USD)</div>
-            <div class="field"><input id="c_step" class="num-s" type="number" min="0" step="1" value="5" /></div>
+            <div class="field input-wrap"><input id="c_step" data-testid="c-step" class="num-s" type="text" value="5" /></div>
           </div>
         </div>
         <div id="c_amtHint" class="text-xs mt-1" style="color:var(--muted)"></div>
@@ -740,24 +745,108 @@ function alignRsi(main,rsi){
 }
 function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
 function setStatus(prefix,text){ const el=document.getElementById(prefix+'_status'); if(el) el.textContent=text; }
-function clampWdca(){
-  var base=Number(String(document.getElementById('c_base').value).replace(',','.'))||0;
-  var min =Number(String(document.getElementById('c_min').value).replace(',','.'))||0;
-  var max =Number(String(document.getElementById('c_max').value).replace(',','.'))||0;
-  var step=Math.max(1,Number(String(document.getElementById('c_step').value).replace(',','.'))||1);
-  min=Math.max(0,min);
-  base=Math.max(min,base);
-  max=Math.max(base,max);
-  document.getElementById('c_min').value=min;
-  document.getElementById('c_base').value=base;
-  document.getElementById('c_max').value=max;
-  document.getElementById('c_step').value=step;
+function parseNumber(str){
+  if(str==null) return null;
+  const c=String(str).replace(/[^0-9.-]/g,'');
+  if(c===''||c==='-'||c==='.'||c==='-.') return null;
+  const n=Number(c);
+  return Number.isFinite(n)?n:null;
 }
-['c_min','c_base','c_max','c_step'].forEach(function(id){
-  var el=document.getElementById(id);
-  if(el){ el.addEventListener('input',clampWdca); el.addEventListener('change',clampWdca); }
+
+const stateC={
+  paramsDraft:{base:100,min:50,max:300,overdraft:0,step:5},
+  params:{base:100,min:50,max:300,overdraft:0,step:5},
+  errors:{}
+};
+
+function removeFieldWarning(id){
+  const tip=document.querySelector(`[data-tooltip-id="${id}"]`);
+  if(tip) tip.remove();
+}
+
+function showFieldWarning(inputEl,messages,id){
+  removeFieldWarning(id);
+  const wrap=inputEl.closest('.input-wrap');
+  if(!wrap) return;
+  const tip=document.createElement('div');
+  tip.className='field-tooltip';
+  tip.dataset.tooltipId=id;
+  tip.innerHTML=messages.join('<br>');
+  wrap.appendChild(tip);
+  tip.style.left='0';
+  tip.style.bottom=inputEl.offsetHeight+4+'px';
+}
+
+function applySuggestedFix(field,val){
+  const el=document.getElementById('c_'+field);
+  if(!el) return;
+  el.value=String(val);
+  stateC.paramsDraft[field]=val;
+  validateField(field);
+  commitField(field);
+  updateBacktestDisabled();
+}
+
+function validateField(id){
+  const d=stateC.paramsDraft;
+  const msgs=[];
+  if(id==='min'){
+    if(d.min==null) msgs.push('Min required');
+    if(d.min<0) msgs.push('Min must be ≥ 0');
+    if(d.max!=null && d.min>d.max) msgs.push('Min must be ≤ Max');
+  } else if(id==='base'){
+    if(d.base==null) msgs.push('Base required');
+    if(d.base<0) msgs.push('Base must be ≥ 0');
+    if(d.min!=null && d.max!=null && (d.base<d.min || d.base>d.max)){
+      const minS=fmt(d.min,0), maxS=fmt(d.max,0);
+      msgs.push(`Base must be between Min and Max. <a onclick="applySuggestedFix('base',${d.min})">Set Base=Min (${minS})</a> • <a onclick="applySuggestedFix('base',${d.max})">Set Base=Max (${maxS})</a>`);
+    }
+  } else if(id==='max'){
+    if(d.max==null) msgs.push('Max required');
+    if(d.max<0) msgs.push('Max must be ≥ 0');
+    if(d.min!=null && d.max<d.min) msgs.push('Max must be ≥ Min');
+  } else if(id==='overdraft'){
+    if(d.overdraft==null || d.overdraft<0) msgs.push('Overdraft must be ≥ 0');
+  } else if(id==='step'){
+    if(!(d.step>0)) msgs.push('Step must be > 0');
+  }
+  stateC.errors[id]=msgs;
+  const input=document.getElementById('c_'+id);
+  const wrap=input?input.parentElement:null;
+  if(wrap){
+    if(msgs.length){ wrap.classList.add('input-error'); showFieldWarning(input,msgs,id); }
+    else { wrap.classList.remove('input-error'); removeFieldWarning(id); }
+  }
+  return msgs.length===0;
+}
+
+function updateBacktestDisabled(){
+  const btn=document.getElementById('c_runBtn');
+  const hasErr=Object.values(stateC.errors).some(arr=>arr && arr.length);
+  if(btn) btn.disabled=hasErr;
+}
+
+function commitField(id){
+  if(stateC.errors[id] && stateC.errors[id].length) return;
+  stateC.params[id]=stateC.paramsDraft[id];
+}
+
+function validateAllC(){
+  let ok=true;
+  ['min','base','max','overdraft','step'].forEach(id=>{ if(!validateField(id)) ok=false; });
+  updateBacktestDisabled();
+  return ok;
+}
+
+['base','min','max','overdraft','step'].forEach(id=>{
+  const el=document.getElementById('c_'+id);
+  if(!el) return;
+  stateC.paramsDraft[id]=parseNumber(el.value);
+  stateC.params[id]=stateC.paramsDraft[id];
+  el.addEventListener('input',e=>{ stateC.paramsDraft[id]=parseNumber(e.target.value); validateField(id); updateBacktestDisabled(); });
+  el.addEventListener('blur',()=>{ validateField(id); commitField(id); updateBacktestDisabled(); });
 });
-clampWdca();
+validateAllC();
 function compactUSD(x){ const abs=Math.abs(x), u=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
   for(const k of u){ if(abs>=k.v) return '$'+(x/k.v).toFixed(abs>=1e9?2:1).replace(/\.0+$/,'')+k.s; }
   return '$'+Number(x).toLocaleString('en-US',{maximumFractionDigits:0}); }
@@ -803,7 +892,7 @@ function onDataLoaded(arr){
   const minISO=RAW[0].date, maxISO=RAW[RAW.length-1].date;
   document.getElementById('loadStatus').textContent = `Loaded ${RAW.length} rows • ${minISO} → ${maxISO}`;
   WSA.setRangeInputs(minISO,maxISO); WSB.setRangeInputs(minISO,maxISO); WSC.setRangeInputs(minISO,maxISO);
-  document.getElementById('a_runBtn').disabled=false; document.getElementById('b_runBtn').disabled=false; document.getElementById('c_runBtn').disabled=false;
+  document.getElementById('a_runBtn').disabled=false; document.getElementById('b_runBtn').disabled=false; document.getElementById('c_runBtn').disabled=false; updateBacktestDisabled();
   setStatus('a','Ready.'); setStatus('b','Ready.'); setStatus('c','Ready.');
 }
 
@@ -935,11 +1024,11 @@ function createWorkspaceC(prefix){
   const ws={
     chartMain:null, chartRSI:null, fpStart:null, fpEnd:null, lastResult:null,
     get frequency(){ return el('freq').value; },
-    get base(){ return Math.max(0, num(el('base').value)||0); },
-    get min(){ return Math.max(0, num(el('min').value)||0); },
-    get max(){ return Math.max(this.min, num(el('max').value)||0); },
-    get overdraft(){ return Math.max(0, num(el('overdraft').value)||0); },
-    get step(){ return Math.max(0, num(el('step').value)||0); },
+    get base(){ return stateC.params.base; },
+    get min(){ return stateC.params.min; },
+    get max(){ return stateC.params.max; },
+    get overdraft(){ return stateC.params.overdraft; },
+    get step(){ return stateC.params.step; },
     get ema(){ return clamp(num(el('ema').value)||50,2,5000); },
     get rsi(){ return clamp(num(el('rsi').value)||14,2,5000); },
     get sensTrend(){ return Math.max(0.001, num(el('sensTrend').value)||0.1); },
@@ -1177,7 +1266,8 @@ function createWorkspaceC(prefix){
       const sISO=this.sISO, eISO=this.eISO;
       if(!sISO || !eISO || sISO>eISO){ setStatus(prefix,'Invalid date range.'); return; }
       const base=sliceRange(sISO,eISO); if(base.length<5){ setStatus(prefix,'Selected range is too short.'); return; }
-      clampWdca();
+      if(!validateAllC()){ setStatus(prefix,'Fix input errors.'); const bad=Object.keys(stateC.errors).find(k=>stateC.errors[k]&&stateC.errors[k].length); if(bad) document.getElementById('c_'+bad).focus(); return; }
+      Object.assign(stateC.params,stateC.paramsDraft);
       let r;
       try{
         const params={ base:this.base, min:this.min, max:this.max, overdraft:this.overdraft, step:this.step, ema:this.ema, rsi:this.rsi,
@@ -1216,7 +1306,8 @@ function createWorkspaceC(prefix){
       if(!RAW.length) return; const min=RAW[0].date, max=RAW[RAW.length-1].date;
       el('freq').value='weekly'; el('base').value=100; el('min').value=50; el('max').value=300; el('overdraft').value=0; el('step').value=5;
       el('ema').value=50; el('rsi').value=14; el('sensTrend').value=0.08; el('sensCost').value=0.10; el('wTrend').value=0.5; el('wCost').value=0.3; el('wRsi').value=0.2; el('alpha').value=0.35; el('preset').value='standard';
-      clampWdca();
+      ['base','min','max','overdraft','step'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); });
+      updateBacktestDisabled();
       this.ensurePickers(); this.fpStart.setDate(min,true); this.fpEnd.setDate(max,true);
       el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
       el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
@@ -1241,7 +1332,7 @@ function createWorkspaceC(prefix){
         el('preset').addEventListener('change',()=>{
           const sel=el('preset').value; const key=sel.charAt(0).toUpperCase()+sel.slice(1);
           const cfg=WDCA_PRESETS[key];
-          if(cfg){ Object.entries(cfg).forEach(([k,v])=>{ const inp=getI(prefix,k); if(inp) setInputValue(inp,v); }); clampWdca(); }
+          if(cfg){ Object.entries(cfg).forEach(([k,v])=>{ const inp=getI(prefix,k); if(inp) setInputValue(inp,v); }); ['base','min','max','overdraft','step'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); }); updateBacktestDisabled(); }
         });
       }
   };
