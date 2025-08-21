@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.2</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.3</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +179,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.5.2</span>
+        <span class="chip">Dual v1.5.3</span>
         <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
@@ -720,13 +720,23 @@
           </div>
           <div style="height:170px"><canvas id="c_chartRSI"></canvas></div>
         </div>
+        <div class="rsi-embed mt-4" id="c_tradeWrap">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-sm" style="color:var(--muted)">Buy/Sell (C)</div>
+            <div class="text-xs" style="color:var(--muted)">Bar = USD per trade (Buy +, Sell −)</div>
+          </div>
+          <div style="height:170px"><canvas id="c_chartBS"></canvas></div>
+        </div>
 
         <div class="text-[11px] mt-3" style="color:var(--muted)">*Prices & returns based on historical data. Not investment advice.</div>
       </section>
 
       <div class="chip mt-5 mb-2">Details</div>
       <details id="c_logWrap" class="details table-wrap panel p-4 md:p-5" open>
-        <summary class="cursor-pointer font-semibold text-base">Transaction details (C)</summary>
+        <summary class="cursor-pointer font-semibold text-base flex items-center justify-between gap-3">
+          <span>Transaction details (C)</span>
+          <button id="c_exportBtn" class="util-btn sm" type="button" title="Export CSV">Export</button>
+        </summary>
         <div class="mt-3">
           <table class="tbl-compact">
             <thead id="c_logHead"><tr><th>#</th><th>Date</th><th>Type</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr></thead>
@@ -753,7 +763,7 @@ function themeColors(){
 }
 function updateChartTheme(ws){
   if(!ws) return; const c=themeColors();
-  [ws.chartMain,ws.chartRSI].forEach(ch=>{
+  [ws.chartMain,ws.chartRSI,ws.chartBS].forEach(ch=>{
     if(!ch) return; const o=ch.options;
     if(o.scales.x){ o.scales.x.grid.color=c.gridWeak; if(o.scales.x.ticks) o.scales.x.ticks.color=c.tick; }
     if(o.scales.y){ o.scales.y.grid.color=c.gridStrong; if(o.scales.y.ticks) o.scales.y.ticks.color=c.tick; }
@@ -811,12 +821,15 @@ const WDCA_PRESETS={
                   phaseLB:20, phaseCutUp:0.25, phaseBoostDn:0.35, bankReserve:30, bankCap:10 },
   Aggressive:   { base:100, min:40,  max:350, overdraft:200, step:5,  ema:50,  rsi:14, sensTrend:0.06, sensCost:0.08, wTrend:0.45, wCost:0.35, wRsi:0.2, alpha:0.45 },
 };
-function alignRsi(main,rsi){
-  if(!main||!rsi) return;
-  const ca=main.chartArea;
-  rsi.options.layout=rsi.options.layout||{};
-  rsi.options.layout.padding={left:ca.left,right:main.width-ca.right};
-  rsi.update('none');
+function alignUnder(main, ...subs){
+  if(!main || !main.chartArea) return;
+  const ca = main.chartArea;
+  for(const ch of subs){
+    if(!ch) continue;
+    ch.options.layout = ch.options.layout || {};
+    ch.options.layout.padding = { left: ca.left, right: main.width - ca.right };
+    ch.update('none');
+  }
 }
 
 function computePhaseSeries(close,emaPeriodFast,rsiPeriod,params){
@@ -1202,7 +1215,7 @@ function runWDCA(freq, params, startISO, endISO){
 function createWorkspaceC(prefix){
   const el=id=>document.getElementById(prefix+'_'+id);
   const ws={
-    chartMain:null, chartRSI:null, fpStart:null, fpEnd:null, lastResult:null,
+    chartMain:null, chartRSI:null, chartBS:null, fpStart:null, fpEnd:null, lastResult:null,
     get frequency(){ return el('freq').value; },
     get base(){ return stateC.params.base; },
     get min(){ return stateC.params.min; },
@@ -1259,10 +1272,23 @@ function createWorkspaceC(prefix){
     renderCharts(series,investedSeries,indicators){
       destroyChartByCanvasId(prefix+'_chartMain');
       destroyChartByCanvasId(prefix+'_chartRSI');
+      destroyChartByCanvasId(prefix+'_chartBS');
       this.chartMain=null;
       this.chartRSI=null;
+      this.chartBS=null;
 
       const labels=series.map(p=>p.date);
+      const bars=Array(labels.length).fill(null);
+      if(this.lastResult && Array.isArray(this.lastResult.logRows)){
+        const labelIndex=new Map(labels.map((d,i)=>[d,i]));
+        for(const r of this.lastResult.logRows){
+          const idx=labelIndex.get(r.date);
+          if(idx!=null){ const val=Number(r.invested)||0; bars[idx]=val!==0?val:null; }
+        }
+      }
+      const tradeWrap=document.getElementById('c_tradeWrap');
+      if(bars.some(v=>v!=null)) tradeWrap.style.display=''; else tradeWrap.style.display='none';
+
       let price=series.map(p=>p.price); price=price.map(safe);
       let value=series.map(p=>p.value); value=value.map(safe);
       let invested=investedSeries.map(p=>p.invested); invested=invested.map(safe);
@@ -1370,12 +1396,34 @@ function createWorkspaceC(prefix){
             plugins:{tooltip:{enabled:false},legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}}
           }
         });
-        var ws=this;
-        requestAnimationFrame(function(){ alignRsi(ws.chartMain,ws.chartRSI); });
       } else {
         if(rsiWrap) rsiWrap.style.display='none';
         this.chartRSI=null;
       }
+
+      if(tradeWrap.style.display!=='none'){
+        const ctxBS=document.getElementById(prefix+'_chartBS').getContext('2d');
+        this.chartBS=new Chart(ctxBS,{
+          type:'bar',
+          data:{labels,datasets:[{label:'Trades (USD)',data:bars,backgroundColor:ctx=>{const v=ctx.raw; if(v==null) return 'rgba(0,0,0,0)'; return v>=0?'rgba(34,197,94,.8)':'rgba(239,68,68,.8)';},borderWidth:0} ]},
+          options:{
+            responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+            animation:{onComplete:debouncedMH},
+            scales:{
+              y:{ticks:{color:tc.tick,callback:v=>compactUSD(v)},grid:{color:tc.gridStrong}},
+              x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,display:false}}
+            },
+            plugins:{
+              legend:{labels:{color:tc.tick,font:{size:11}}},
+              tooltip:{callbacks:{label:ctx=>{const v=ctx.raw||0; const t=v>=0?'Buy':'Sell'; return `${t}: ${compactUSD(Math.abs(v))}`;}}},
+              rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans},
+              crosshair:true
+            }
+          }
+        });
+      }
+      var ws=this;
+      requestAnimationFrame(function(){ alignUnder(ws.chartMain, ws.chartRSI, ws.chartBS); });
     },
 
     updateKPI(r,ls){
@@ -1495,7 +1543,7 @@ function createWorkspaceC(prefix){
       el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
       el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
       setStatus(prefix,'Ready.');
-      this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null;
+      this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null; this.chartBS&&this.chartBS.destroy(); this.chartBS=null; document.getElementById('c_tradeWrap').style.display='none';
       ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_bankFinal','k_bankMin','k_avgMult','k_hits','k_sells','k_net'].forEach(id=>{ el(id).textContent='-'; });
       ['k_trades_ab','k_invested_ab','k_btc_ab','k_avg_ab','k_value_ab','k_pnl_ab'].forEach(id=>{ el(id).textContent=''; });
       el('amtHint').textContent='';
@@ -1729,7 +1777,7 @@ function createWorkspace(prefix){
           }
         });
         var ws=this;
-        requestAnimationFrame(function(){ alignRsi(ws.chartMain,ws.chartRSI); });
+        requestAnimationFrame(function(){ alignUnder(ws.chartMain,ws.chartRSI); });
       } else {
         if(rsiWrap) rsiWrap.style.display='none';
         this.chartRSI=null;
@@ -1880,9 +1928,42 @@ function copyConfig(from,to){
   wsTo.updateRangeHint();
   debouncedMH();
 }
+
+function exportCsvC(){
+  const rows=(WSC && WSC.lastResult && Array.isArray(WSC.lastResult.logRows))?WSC.lastResult.logRows:[];
+  if(!rows.length) return;
+  const lines=["#,date,type,price,invested,totalInvested,value,score,s1,s2,s3,f,bank"];
+  rows.forEach((r,i)=>{
+    const type=(Number(r.invested)||0)<0?'Sell':'Buy';
+    lines.push([
+      i+1,
+      r.date,
+      type,
+      r.price??'',
+      r.invested??'',
+      r.totalInvested??'',
+      r.value??'',
+      r.score??'',
+      r.s1??'',
+      r.s2??'',
+      r.s3??'',
+      r.f??'',
+      r.bank??''
+    ].join(','));
+  });
+  const blob=new Blob([lines.join('\n')],{type:'text/csv'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download='wdca-transactions_'+new Date().toISOString().slice(0,10)+'.csv';
+  document.body.appendChild(a); a.click();
+  setTimeout(()=>{ document.body.removeChild(a); URL.revokeObjectURL(url); },0);
+}
 const WSA=createWorkspace('a'); const WSB=createWorkspace('b'); const WSC=createWorkspace('c');
+document.getElementById('c_tradeWrap').style.display='none';
+document.getElementById('c_exportBtn')?.addEventListener('click', (e)=>{ e.stopPropagation(); exportCsvC(); });
 const realign = debounce(function(){
-  [WSA,WSB,WSC].forEach(function(ws){ alignRsi(ws && ws.chartMain, ws && ws.chartRSI); });
+  [WSA,WSB,WSC].forEach(function(ws){ alignUnder(ws && ws.chartMain, ws && ws.chartRSI, ws && ws.chartBS); });
 },100);
 window.addEventListener('resize', realign, { passive:true });
 document.getElementById('copyAtoB').addEventListener('click', ()=>copyConfig('a','b'));
@@ -1949,7 +2030,7 @@ const grid=document.getElementById('gridWrap');
 function setView(mode){
   grid.classList.remove('two','focusA','focusB','wdca');
   grid.classList.add(mode);
-  [WSA,WSB,WSC].forEach(ws=>{ if(ws.chartMain) ws.chartMain.resize(); if(ws.chartRSI) ws.chartRSI.resize(); });
+  [WSA,WSB,WSC].forEach(ws=>{ if(ws.chartMain) ws.chartMain.resize(); if(ws.chartRSI) ws.chartRSI.resize(); if(ws.chartBS) ws.chartBS.resize(); });
   realign();
   debouncedMH();
 }
