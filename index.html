@@ -725,10 +725,11 @@ const num=v=>Number(String(v).replace(/\s/g,'').replace(',','.'));
 const getI=(p,id)=>document.getElementById(p+'_'+id);
 function setInputValue(el,x){ const s=(Math.round(Number(x)*1e6)/1e6).toString(); el.value=s; }
 let WDCA_SYNCING=false;
-function roundToStep(x,step){ step=Number(step)||1; return Math.round(x/step)*step; }
+function roundToStep(x,step){ step=Number(step)||1; return Math.floor(x/step)*step; }
 function showAmtHint(prefix,clamped){ const h=getI(prefix,'amtHint'); if(h) h.textContent=clamped?'Adjusted to limits':''; }
-function syncRatiosFromAmounts(){/* removed in v1.4.8 */}
-function syncAmountsFromRatios(){/* removed in v1.4.8 */}
+const safe=v=>Number.isFinite(v)?v:null;
+function syncRatiosFromAmounts(){/* removed v1.4.8+ */}
+function syncAmountsFromRatios(){/* removed v1.4.8+ */}
 function sanitizeAmounts(prefix){
   if(WDCA_SYNCING) return; WDCA_SYNCING=true;
   try{
@@ -879,7 +880,6 @@ function runWDCA(series,freq,p,sISO,eISO){
   let bankMin=0, hitsMin=0, hitsMax=0, multSum=0, prevScore=0;
   const log=[], port=[], invS=[];
   const EPS=p.step>0?p.step*0.5:1e-9;
-  const safe=v=>Number.isFinite(v)?v:null;
   for(let i=0;i<series.length;i++){
     const row=series[i]; const price=row.close; const date=row.date;
     if(set.has(date)){
@@ -896,18 +896,18 @@ function runWDCA(series,freq,p,sISO,eISO){
       const rmax=p.base>0?(p.max/p.base):1;
       const f=score>=0?1+score*(rmax-1):1+score*(1-rmin);
       let desired=clamp(f*p.base,p.min,p.max);
-      const afford=bank+p.overdraft;
+      const afford=bank+(p.overdraft||0);
       let invest=Math.min(desired,afford);
       invest=Math.max(invest,Math.min(p.min,afford));
       invest=roundToStep(invest,p.step);
-      invest=Math.min(invest,afford);
       if(invest<=0){
         if(bank<bankMin) bankMin=bank;
-        log.push({date, price:safe(price), invested:0, totalInvested:invested, value:safe(btc*price), score:safe(score), s1:safe(s1), s2:safe(s2), s3:safe(s3), f:safe(f), bank:safe(bank)});
+        log.push({date, price:safe(price), invested:0, totalInvested:safe(invested), value:safe(btc*price), score:safe(score), s1:safe(s1), s2:safe(s2), s3:safe(s3), f:safe(f), bank:safe(bank)});
       }else{
         bank-=invest; if(bank<bankMin) bankMin=bank;
-        const qty=invest/price; btc+=qty; invested+=invest; if(!firstBuyDate) firstBuyDate=date;
-        multSum+=invest/p.base;
+        let qty=invest/price; if(!Number.isFinite(qty)) qty=0;
+        if(qty>0){ btc+=qty; invested+=invest; if(!firstBuyDate) firstBuyDate=date; }
+        multSum+=p.base>0?invest/p.base:0;
         if(Math.abs(invest-p.min)<=EPS) hitsMin++;
         if(Math.abs(invest-p.max)<=EPS) hitsMax++;
         const value=btc*price;
@@ -918,7 +918,8 @@ function runWDCA(series,freq,p,sISO,eISO){
     port.push({date, price:safe(price), value:safe(btc*price), invested:safe(invested)});
   }
   const lastEntry=series[series.length-1]; const last=lastEntry.close;
-  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastEntry.date, value:btc*last,
+  const finalVal=btc*last;
+  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:null, lastPrice:last, lastPriceDate:lastEntry.date, value:Number.isFinite(finalVal)?finalVal:null,
            firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS,
            bankFinal:bank, bankMin, avgMultiplier:schedule.length?multSum/schedule.length:0, hitsMin, hitsMax };
 }
@@ -984,11 +985,10 @@ function createWorkspaceC(prefix){
       if(this.chartMain) this.chartMain.destroy();
       if(this.chartRSI)  this.chartRSI.destroy();
 
-      const safe=v=>Number.isFinite(v)?v:null;
       const labels=series.map(p=>p.date);
-      const price=series.map(p=>safe(p.price));
-      const value=series.map(p=>safe(p.value));
-      const invested=investedSeries.map(p=>safe(p.invested));
+      let price=series.map(p=>p.price); price=price.map(safe);
+      let value=series.map(p=>p.value); value=value.map(safe);
+      let invested=investedSeries.map(p=>p.invested); invested=invested.map(safe);
       const tc=themeColors();
       const isDark=document.documentElement.classList.contains('dark') || document.documentElement.dataset.theme!=='light';
       const datasets=[
@@ -996,14 +996,15 @@ function createWorkspaceC(prefix){
         {label:'Portfolio value (USD)',data:value,yAxisID:'y1',borderColor:'#60a5fa',pointRadius:0,tension:.25,borderWidth:1.6,cubicInterpolationMode:'monotone',spanGaps:true},
         {label:'Total contribution (USD)',data:invested,yAxisID:'y1',borderColor:'rgba(59,130,246,0)',backgroundColor:'rgba(59,130,246,.18)',fill:true,pointRadius:0,tension:.2,borderWidth:0.01}
       ];
-      if(indicators.ma) datasets.push({label:`SMA (${this.maP})`,data:indicators.ma,yAxisID:'y',borderColor:'#fbbf24',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
-      if(indicators.ema) datasets.push({label:`EMA (${this.emaP})`,data:indicators.ema,yAxisID:'y',borderColor:'#e879f9',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
+      if(indicators.ma) datasets.push({label:`SMA (${this.maP})`,data:indicators.ma.map(safe),yAxisID:'y',borderColor:'#fbbf24',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
+      if(indicators.ema) datasets.push({label:`EMA (${this.emaP})`,data:indicators.ema.map(safe),yAxisID:'y',borderColor:'#e879f9',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
 
+      const rsiData=indicators.rsi?indicators.rsi.map(safe):null;
       const rsiSpans=[];
-      if(this.rsiAlertOn && indicators.rsi){
+      if(this.rsiAlertOn && rsiData && rsiData.some(v=>v!=null)){
         const near=this.rsiNear||0;
         const alpha=document.documentElement.dataset.theme==='light'?0.1:0.12;
-        const rsi=indicators.rsi;
+        const rsi=rsiData;
         let start=null,type=null;
         for(let i=0;i<rsi.length;i++){
           const v=rsi[i];
@@ -1068,10 +1069,9 @@ function createWorkspaceC(prefix){
       });
 
       const rsiEmbed=document.getElementById(prefix+'_rsiEmbed');
-      if(indicators.rsi && indicators.rsi.some(v=>v!=null)){
+      if(rsiData && rsiData.some(v=>v!=null)){
         rsiEmbed.style.display='';
         const ctxRsi=document.getElementById(prefix+'_chartRSI').getContext('2d');
-        const rsiData=indicators.rsi.map(v=>safe(v));
         document.getElementById(prefix+'_rsiLegend').textContent=this.rsiP;
         this.chartRSI=new Chart(ctxRsi,{
           type:'line',
@@ -1101,26 +1101,29 @@ function createWorkspaceC(prefix){
     },
 
     updateKPI(r,ls){
-      const invested=r.invested, bank=r.bankFinal, portfolio=r.value;
-      const finalValue=portfolio+bank;
-      const pnlPct=invested>0 && isFinite(finalValue)?(finalValue/invested-1)*100:null;
+      const invested=r.invested;
+      const bank=r.bankFinal;
+      const portfolio=r.value;
+      const finalValue=(Number.isFinite(portfolio)?portfolio:0)+(Number.isFinite(bank)?bank:0);
+      const totalContrib=(Number.isFinite(invested)?invested:0)+(Number.isFinite(bank)?bank:0);
+      const pnlPct=totalContrib>0 && Number.isFinite(finalValue)?(finalValue/totalContrib-1)*100:null;
       const buyCount=r.scheduleCount;
       const kdur=el('k_duration');
       if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate); else kdur.textContent='—';
-      el('k_trades').textContent=isFinite(buyCount)?fmt(buyCount,0):'—';
-      const kinv=el('k_invested'); kinv.textContent=isFinite(invested)?compactUSD(invested):'—'; kinv.title='Deployed into BTC (excludes bank)';
-      el('k_btc').textContent=isFinite(r.btc)?fmt(r.btc,3):'—';
-      el('k_avg').textContent=r.btc>0&&isFinite(r.avgCost)?compactUSD(r.avgCost):'—';
-      const kval=el('k_value'); kval.textContent=isFinite(finalValue)?compactUSD(finalValue):'—'; kval.title='Portfolio + bank (cash)';
+      el('k_trades').textContent=Number.isFinite(buyCount)?fmt(buyCount,0):'—';
+      const kinv=el('k_invested'); kinv.textContent=Number.isFinite(invested)?compactUSD(invested):'—'; kinv.title='Deployed into BTC (excludes bank)';
+      el('k_btc').textContent=Number.isFinite(r.btc)?fmt(r.btc,3):'—';
+      el('k_avg').textContent=r.btc>0&&Number.isFinite(r.avgCost)?compactUSD(r.avgCost):'—';
+      const kval=el('k_value'); kval.textContent=Number.isFinite(finalValue)?compactUSD(finalValue):'—'; kval.title='Portfolio + bank (cash)';
       const kpnl=el('k_pnl');
-      if(pnlPct!=null && isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
+      if(pnlPct!=null && Number.isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
       else{ kpnl.textContent='—'; kpnl.title='Return undefined when invested ≤ 0'; }
-      if(ls){ const lsPct=pnlPct!=null && invested>0 && isFinite(ls.value)?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
+      if(ls){ const lsPct=pnlPct!=null && invested>0 && Number.isFinite(ls.value)?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&Number.isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
       else{ el('k_vsls').textContent='—'; }
-      el('k_bankFinal').textContent=isFinite(r.bankFinal)?compactUSD(r.bankFinal):'—';
-      el('k_bankMin').textContent=isFinite(r.bankMin)?compactUSD(r.bankMin):'—';
-      el('k_avgMult').textContent=isFinite(r.avgMultiplier)?fmt(r.avgMultiplier,2):'—';
-      el('k_hits').textContent=(isFinite(r.hitsMin)&&isFinite(r.hitsMax))?`${r.hitsMin} / ${r.hitsMax}`:'—';
+      el('k_bankFinal').textContent=Number.isFinite(r.bankFinal)?compactUSD(r.bankFinal):'—';
+      el('k_bankMin').textContent=Number.isFinite(r.bankMin)?compactUSD(r.bankMin):'—';
+      el('k_avgMult').textContent=Number.isFinite(r.avgMultiplier)?fmt(r.avgMultiplier,2):'—';
+      el('k_hits').textContent=(Number.isFinite(r.hitsMin)&&Number.isFinite(r.hitsMax))?`${r.hitsMin} / ${r.hitsMax}`:'—';
 
       const ab=[['k_trades_ab',res=>{if(!res) return null; const c=res.scheduleCount!==undefined?res.scheduleCount:(res.logRows?res.logRows.filter(x=>x.invested>0).length:0); return fmt(c,0);}],
                 ['k_invested_ab',res=>res?compactUSD(res.invested):null],
@@ -1143,14 +1146,17 @@ function createWorkspaceC(prefix){
       } else {
         r.logRows.forEach((row,i)=>{
           if(row.invested<=0) return;
-          const investedPer=row.invested, investedCum=row.totalInvested, val=row.value;
-          const pnlAbs=val-investedCum, pnlPctRow=investedCum>0?(val/investedCum-1)*100:null;
+          const investedPer=row.invested;
+          const investedCum=row.totalInvested;
+          const val=row.value;
+          const pnlAbs=(val!=null && investedCum!=null)?val-investedCum:null;
+          const pnlPctRow=(val!=null && investedCum>0)?(val/investedCum-1)*100:null;
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${i+1}</td><td>${row.date}</td><td>${compactUSD(row.price)}</td>`+
-                       `<td>${compactUSD(investedPer)}</td><td>${compactUSD(investedCum)}</td><td>${compactUSD(val)}</td>`+
-                       `<td class="${pnlAbs>=0?'gain':'loss'}">${pnlAbs>=0?'+':''}${compactUSD(pnlAbs)}</td>`+
+          tr.innerHTML=`<td>${i+1}</td><td>${row.date||'—'}</td><td>${row.price!=null?compactUSD(row.price):'—'}</td>`+
+                       `<td>${investedPer!=null?compactUSD(investedPer):'—'}</td><td>${investedCum!=null?compactUSD(investedCum):'—'}</td><td>${val!=null?compactUSD(val):'—'}</td>`+
+                       `<td class="${pnlAbs!=null?(pnlAbs>=0?'gain':'loss'):''}">${pnlAbs!=null?(pnlAbs>=0?'+':'')+compactUSD(pnlAbs):'—'}</td>`+
                        `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`+
-                       `<td>${fmt(row.score,2)}</td><td>${fmt(row.s1,2)}</td><td>${fmt(row.s2,2)}</td><td>${fmt(row.s3,2)}</td><td>${fmt(row.f,2)}</td><td>${compactUSD(row.bank)}</td>`;
+                       `<td>${row.score!=null?fmt(row.score,2):'—'}</td><td>${row.s1!=null?fmt(row.s1,2):'—'}</td><td>${row.s2!=null?fmt(row.s2,2):'—'}</td><td>${row.s3!=null?fmt(row.s3,2):'—'}</td><td>${row.f!=null?fmt(row.f,2):'—'}</td><td>${row.bank!=null?compactUSD(row.bank):'—'}</td>`;
           tbody.appendChild(tr);
         });
       }
@@ -1163,19 +1169,26 @@ function createWorkspaceC(prefix){
       if(!sISO || !eISO || sISO>eISO){ document.getElementById(prefix+'_status').textContent='Invalid date range.'; return; }
       const base=sliceRange(sISO,eISO); if(base.length<5){ document.getElementById(prefix+'_status').textContent='Selected range is too short.'; return; }
 
-      const params={ base:this.base, min:this.min, max:this.max, overdraft:this.overdraft, step:this.step, ema:this.ema, rsi:this.rsi,
-                     sensTrend:this.sensTrend, sensCost:this.sensCost, wTrend:this.wTrend, wCost:this.wCost, wRsi:this.wRsi,
-                     alpha:this.alpha };
-      const r=runWDCA(base,this.frequency,params,sISO,eISO);
-      this.lastResult=r;
-      const ls=r.firstBuyDate?calcLumpSum(r.invested,r.firstBuyDate,r.lastPrice):null;
-      const ind=this.computeIndicators(r.portfolioSeries);
-      this.renderCharts(r.portfolioSeries,r.investedSeries,ind);
-      this.updateKPI(r,ls);
-      const buys=r.scheduleCount;
-      document.getElementById(prefix+'_status').textContent=`Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}`;
-      this.updateRangeHint();
-      debouncedMH();
+      try{
+        const params={ base:this.base, min:this.min, max:this.max, overdraft:this.overdraft, step:this.step, ema:this.ema, rsi:this.rsi,
+                       sensTrend:this.sensTrend, sensCost:this.sensCost, wTrend:this.wTrend, wCost:this.wCost, wRsi:this.wRsi,
+                       alpha:this.alpha };
+        const r=runWDCA(base,this.frequency,params,sISO,eISO);
+        this.lastResult=r;
+        const ls=r.firstBuyDate?calcLumpSum(r.invested,r.firstBuyDate,r.lastPrice):null;
+        const ind=this.computeIndicators(r.portfolioSeries);
+        this.renderCharts(r.portfolioSeries,r.investedSeries,ind);
+        this.updateKPI(r,ls);
+        const buys=r.scheduleCount;
+        document.getElementById(prefix+'_status').textContent=`Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}`;
+        this.updateRangeHint();
+        debouncedMH();
+      } catch(err){
+        const s=document.getElementById(prefix+'_status')||document.getElementById('c_status');
+        if(s) s.textContent='Error: '+err.message;
+        console.error('[Backtest '+prefix.toUpperCase()+']',err);
+        return;
+      }
     },
 
     refreshIndicatorsOnly(){
@@ -1330,9 +1343,9 @@ function createWorkspace(prefix){
       if(this.chartRSI)  this.chartRSI.destroy();
 
       const labels   = series.map(p=>p.date);
-      const price    = series.map(p=>p.price);
-      const value    = series.map(p=>p.value);
-      const invested = investedSeries.map(p=>p.invested);
+      let price    = series.map(p=>p.price);     price    = price.map(safe);
+      let value    = series.map(p=>p.value);     value    = value.map(safe);
+      let invested = investedSeries.map(p=>p.invested); invested = invested.map(safe);
       const tc = themeColors();
       const isDark=document.documentElement.classList.contains('dark') || document.documentElement.dataset.theme!=='light';
 
@@ -1341,14 +1354,15 @@ function createWorkspace(prefix){
         { label:'Portfolio value (USD)', data:value, yAxisID:'y1', borderColor:'#60a5fa', pointRadius:0, tension:.25, borderWidth:1.6, cubicInterpolationMode:'monotone', spanGaps:true },
         { label:'Total contribution (USD)', data:invested, yAxisID:'y1', borderColor:'rgba(59,130,246,0)', backgroundColor:'rgba(59,130,246,.18)', fill:true, pointRadius:0, tension:.2, borderWidth:0.01 }
       ];
-      if(indicators.ma)  datasets.push({ label:`SMA (${this.maP})`, data:indicators.ma,  yAxisID:'y', borderColor:'#fbbf24', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
-      if(indicators.ema) datasets.push({ label:`EMA (${this.emaP})`, data:indicators.ema, yAxisID:'y', borderColor:'#e879f9', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
+      if(indicators.ma)  datasets.push({ label:`SMA (${this.maP})`, data:indicators.ma.map(safe),  yAxisID:'y', borderColor:'#fbbf24', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
+      if(indicators.ema) datasets.push({ label:`EMA (${this.emaP})`, data:indicators.ema.map(safe), yAxisID:'y', borderColor:'#e879f9', pointRadius:0, tension:.2, borderWidth:1.6, spanGaps:true });
 
+      const rsiData=indicators.rsi?indicators.rsi.map(safe):null;
       const rsiSpans=[];
-      if(this.rsiAlertOn && indicators.rsi){
+      if(this.rsiAlertOn && rsiData && rsiData.some(v=>v!=null)){
         const near=this.rsiNear||0;
         const alpha=document.documentElement.dataset.theme==='light'?0.1:0.12;
-        const rsi=indicators.rsi;
+        const rsi=rsiData;
         let start=null,type=null;
         for(let i=0;i<rsi.length;i++){
           const v=rsi[i];
@@ -1413,10 +1427,9 @@ function createWorkspace(prefix){
       });
 
       const rsiEmbed=document.getElementById(prefix+'_rsiEmbed');
-      if(indicators.rsi){
+      if(rsiData && rsiData.some(v=>v!=null)){
         rsiEmbed.style.display='';
         const ctxRsi=document.getElementById(prefix+'_chartRSI').getContext('2d');
-        const rsiData = indicators.rsi;
         document.getElementById(prefix+'_rsiLegend').textContent=this.rsiP;
         this.chartRSI=new Chart(ctxRsi,{
           type:'line',
@@ -1446,36 +1459,42 @@ function createWorkspace(prefix){
     }, // end renderCharts
 
     updateKPI(r,ls,mode){
-      const invested=r.invested, value=r.value;
-      const pnlPct=invested>0 && isFinite(value)?(value/invested-1)*100:null;
+      const invested=r.invested;
+      const value=r.value;
+      const pnlPct=invested>0 && Number.isFinite(value)?(value/invested-1)*100:null;
       const buyCount=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
       const kdur=el('k_duration');
       if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate); else kdur.textContent='—';
-      el('k_trades').textContent=isFinite(buyCount)?fmt(buyCount,0):'—';
-      const kinv=el('k_invested'); kinv.textContent=isFinite(invested)?compactUSD(invested):'—'; kinv.title='Net cashflow';
-      el('k_btc').textContent=isFinite(r.btc)?fmt(r.btc,3):'—';
-      el('k_avg').textContent=r.btc>0&&isFinite(r.avgCost)?compactUSD(r.avgCost):'—';
-      el('k_value').textContent=isFinite(value)?compactUSD(value):'—';
+      el('k_trades').textContent=Number.isFinite(buyCount)?fmt(buyCount,0):'—';
+      const kinv=el('k_invested'); kinv.textContent=Number.isFinite(invested)?compactUSD(invested):'—'; kinv.title='Net cashflow';
+      el('k_btc').textContent=Number.isFinite(r.btc)?fmt(r.btc,3):'—';
+      el('k_avg').textContent=r.btc>0&&Number.isFinite(r.avgCost)?compactUSD(r.avgCost):'—';
+      el('k_value').textContent=Number.isFinite(value)?compactUSD(value):'—';
       const kpnl=el('k_pnl');
-      if(pnlPct!=null && isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
+      if(pnlPct!=null && Number.isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
       else{ kpnl.textContent='—'; kpnl.title='Return undefined when net invested ≤ 0'; }
-      if(ls){ const lsPct=invested>0&&isFinite(ls.value)?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
+      if(ls){ const lsPct=invested>0&&Number.isFinite(ls.value)?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&Number.isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
       else{ el('k_vsls').textContent='—'; }
 
       const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
       head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Invested</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th></tr>';
-      if(!r.logRows.length){
+      const hasBuy=r.logRows.some(row=>row.invested>0);
+      if(!hasBuy){
         const tr=document.createElement('tr');
         tr.innerHTML='<td colspan="8" style="text-align:center;color:var(--muted)">No transactions</td>';
         tbody.appendChild(tr);
       } else {
         r.logRows.forEach((row,i)=>{
-          const investedPer=row.invested, investedCum=row.totalInvested, val=row.value;
-          const pnlAbs=val-investedCum, pnlPctRow=investedCum>0?(val/investedCum-1)*100:null;
+          if(row.invested<=0) return;
+          const investedPer=row.invested;
+          const investedCum=row.totalInvested;
+          const val=row.value;
+          const pnlAbs=(val!=null && investedCum!=null)?val-investedCum:null;
+          const pnlPctRow=(val!=null && investedCum>0)?(val/investedCum-1)*100:null;
           const tr=document.createElement('tr');
-          tr.innerHTML=`<td>${i+1}</td><td>${row.date}</td><td>${compactUSD(row.price)}</td>`+
-                       `<td>${compactUSD(investedPer)}</td><td>${compactUSD(investedCum)}</td><td>${compactUSD(val)}</td>`+
-                       `<td class="${pnlAbs>=0?'gain':'loss'}">${pnlAbs>=0?'+':''}${compactUSD(pnlAbs)}</td>`+
+          tr.innerHTML=`<td>${i+1}</td><td>${row.date||'—'}</td><td>${row.price!=null?compactUSD(row.price):'—'}</td>`+
+                       `<td>${investedPer!=null?compactUSD(investedPer):'—'}</td><td>${investedCum!=null?compactUSD(investedCum):'—'}</td><td>${val!=null?compactUSD(val):'—'}</td>`+
+                       `<td class="${pnlAbs!=null?(pnlAbs>=0?'gain':'loss'):''}">${pnlAbs!=null?(pnlAbs>=0?'+':'')+compactUSD(pnlAbs):'—'}</td>`+
                        `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`;
           tbody.appendChild(tr);
         });
@@ -1489,25 +1508,32 @@ function createWorkspace(prefix){
       const base=sliceRange(sISO,eISO);
       if(base.length<5){ document.getElementById(prefix+'_status').textContent='Selected range is too short.'; return; }
 
-      const mode=this.getType();
-      let r;
-      if(mode==='va'){
-        const params={targetStep:this.getTargetStep(), maxContribution:this.getMaxContrib()};
-        r=runVA(base,this.frequency,params,sISO,eISO);
-      } else {
-        r=runDCA(base,this.frequency,this.amount,sISO,eISO);
-      }
-      this.lastResult=r;
-      const ls=r.firstBuyDate?calcLumpSum(r.invested,r.firstBuyDate,r.lastPrice):null;
-      const ind=this.computeIndicators(r.portfolioSeries);
-      this.renderCharts(r.portfolioSeries,r.investedSeries,ind);
-      this.updateKPI(r,ls,mode);
+      try{
+        const mode=this.getType();
+        let r;
+        if(mode==='va'){
+          const params={targetStep:this.getTargetStep(), maxContribution:this.getMaxContrib()};
+          r=runVA(base,this.frequency,params,sISO,eISO);
+        } else {
+          r=runDCA(base,this.frequency,this.amount,sISO,eISO);
+        }
+        this.lastResult=r;
+        const ls=r.firstBuyDate?calcLumpSum(r.invested,r.firstBuyDate,r.lastPrice):null;
+        const ind=this.computeIndicators(r.portfolioSeries);
+        this.renderCharts(r.portfolioSeries,r.investedSeries,ind);
+        this.updateKPI(r,ls,mode);
 
-      const buys=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
-      document.getElementById(prefix+'_status').textContent=
-        `Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}`;
-      this.updateRangeHint();
-      debouncedMH();
+        const buys=mode==='va'?r.logRows.filter(x=>x.invested>0).length:r.scheduleCount;
+        document.getElementById(prefix+'_status').textContent=
+          `Range: ${base[0].date} → ${base[base.length-1].date} • ${base.length} days • Buys: ${buys}`;
+        this.updateRangeHint();
+        debouncedMH();
+      } catch(err){
+        const s=document.getElementById(prefix+'_status')||document.getElementById('c_status');
+        if(s) s.textContent='Error: '+err.message;
+        console.error('[Backtest '+prefix.toUpperCase()+']',err);
+        return;
+      }
     },
 
     refreshIndicatorsOnly(){
