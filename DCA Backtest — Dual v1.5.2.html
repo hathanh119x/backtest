@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.1</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.5.2</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -179,7 +179,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.5.1</span>
+        <span class="chip">Dual v1.5.2</span>
         <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
@@ -806,7 +806,9 @@ function destroyChartByCanvasId(id){
 }
 const WDCA_PRESETS={
   Conservative: { base:100, min:70,  max:220, overdraft:0,   step:5,  ema:100, rsi:14, sensTrend:0.10, sensCost:0.12, wTrend:0.5, wCost:0.3, wRsi:0.2, alpha:0.45 },
-  Standard:     { base:100, min:50,  max:300, overdraft:0,   step:5,  ema:50,  rsi:14, sensTrend:0.08, sensCost:0.10, wTrend:0.5, wCost:0.3, wRsi:0.2, alpha:0.35 },
+  Standard:     { base:100, min:50,  max:300, overdraft:0,   step:5,  ema:50,  rsi:14, sensTrend:0.08, sensCost:0.10, wTrend:0.5, wCost:0.3, wRsi:0.2, alpha:0.35,
+                  sellEn:true, ob1:72, ob2:78, ob3:84, sL1:4, sL2:7, sL3:10, profitGuard:4, minSell:25, maxSellW:500, coolW:1,
+                  phaseLB:20, phaseCutUp:0.25, phaseBoostDn:0.35, bankReserve:30, bankCap:10 },
   Aggressive:   { base:100, min:40,  max:350, overdraft:200, step:5,  ema:50,  rsi:14, sensTrend:0.06, sensCost:0.08, wTrend:0.45, wCost:0.35, wRsi:0.2, alpha:0.45 },
 };
 function alignRsi(main,rsi){
@@ -817,8 +819,37 @@ function alignRsi(main,rsi){
   rsi.update('none');
 }
 
-function detectPhase(i,series,emaArr,emaSlopeArr,rsiArr,params){
-  return {phase:'SIDE',phaseScore:0};
+function computePhaseSeries(close,emaPeriodFast,rsiPeriod,params){
+  const emaFast=EMA(close,emaPeriodFast);
+  const slopeRaw=new Array(close.length).fill(null);
+  for(let i=0;i<close.length;i++){
+    if(i>=params.phaseLB && emaFast[i]!=null && emaFast[i-params.phaseLB]!=null){
+      const prev=emaFast[i-params.phaseLB];
+      slopeRaw[i]=(emaFast[i]-prev)/Math.max(1e-9,prev);
+    }
+  }
+  const emaSlopeSmoothed=EMA(slopeRaw,5);
+  const rsi=RSI(close,rsiPeriod);
+  const phase=new Array(close.length).fill('SIDE');
+  const phaseScore=new Array(close.length).fill(0);
+  for(let i=0;i<close.length;i++){
+    const price=close[i];
+    const ema=emaFast[i];
+    const slope=emaSlopeSmoothed[i];
+    const r=rsi[i];
+    const up=(ema!=null && slope!=null && price>ema && slope>+params.phaseCutUp);
+    const down=(ema!=null && slope!=null && price<ema && slope<-params.phaseCutUp);
+    const flat=!up&&!down;
+    let ph='SIDE', ps=0;
+    if(up && r!=null && r<params.ob1){ ph='BULL_EARLY'; ps=0.25; }
+    else if(up && r!=null && r>=params.ob2){ ph='BULL_LATE'; ps=-0.25; }
+    else if(flat && r!=null && r>=params.ob2){ ph='DISTRIBUTION'; ps=-0.25; }
+    else if(down && r!=null && r>50){ ph='BEAR_EARLY'; ps=0.1; }
+    else if(down && r!=null && r<=50){ ph='BEAR_LATE'; ps=0.2; }
+    if(ph==='BEAR_EARLY' || ph==='BEAR_LATE'){ ps*=1+(params.phaseBoostDn||0); }
+    phase[i]=ph; phaseScore[i]=ps;
+  }
+  return {phase,phaseScore,emaFast,emaSlopeSmoothed,rsi};
 }
 function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
 function setStatus(prefix,text){ const el=document.getElementById(prefix+'_status'); if(el) el.textContent=text; }
@@ -903,6 +934,10 @@ function validateField(id){
     if(d.maxSellW!=null && d.minSell>d.maxSellW) msgs.push('≤ Max/week');
   } else if(id==='maxSellW'){
     if(d.maxSellW==null || d.maxSellW<d.minSell) msgs.push('≥ Min sell');
+  } else if(id==='phaseCutUp'){
+    if(d.phaseCutUp==null || d.phaseCutUp<0 || d.phaseCutUp>1) msgs.push('0-1');
+  } else if(id==='phaseBoostDn'){
+    if(d.phaseBoostDn==null || d.phaseBoostDn<0 || d.phaseBoostDn>1) msgs.push('0-1');
   }
   stateC.errors[id]=msgs;
   const input=document.getElementById('c_'+id);
@@ -927,7 +962,7 @@ function commitField(id){
 
 function validateAllC(){
   let ok=true;
-  ['min','base','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','bankReserve'].forEach(id=>{ if(!validateField(id)) ok=false; });
+  ['min','base','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','bankReserve','phaseCutUp','phaseBoostDn'].forEach(id=>{ if(!validateField(id)) ok=false; });
   updateBacktestDisabled();
   return ok;
 }
@@ -1064,60 +1099,104 @@ function calcLumpSum(invested,firstBuyDate,lastPrice){
   const entry=PRICE_MAP.get(firstBuyDate); if(!entry) return null; const qty=invested/entry; return {entryPrice:entry, btc:qty, value:qty*lastPrice};
 }
 
-function runWDCA(series,freq,p,sISO,eISO){
-  const schedule=buildSchedule(freq,sISO,eISO);
+function runWDCA(freq, params, startISO, endISO){
+  const series=sliceRange(startISO,endISO);
+  const schedule=buildSchedule(freq,startISO,endISO);
   const set=new Set(schedule);
-  const priceArr=series.map(r=>r.close);
-  const emaArr=EMA(priceArr,p.ema);
-  const rsiArr=RSI(priceArr,p.rsi);
-  const wSum=p.wTrend+p.wCost+p.wRsi;
-  let btc=0, invested=0, bank=0;
+  const close=series.map(r=>r.close);
+  const {phase,phaseScore,emaFast,emaSlopeSmoothed,rsi}=computePhaseSeries(close,params.ema,params.rsi,params);
+  let bank=0, invested=0, soldUSD=0, btc=0;
+  let lastSellIdx=-1;
+  let weeklySoldUSD=0;
+  let avgCost=0;
   let firstBuyDate=null;
-  let bankMin=0, hitsMin=0, hitsMax=0, multSum=0, prevScore=0;
-  const log=[], port=[], invS=[];
-  const EPS=p.step>0?p.step*0.5:1e-9;
+  let bankMin=0, hitsMin=0, hitsMax=0, multSum=0;
+  const log=[], port=[], invS=[], netInvS=[];
+  const EPS=params.step>0?params.step*0.5:1e-9;
+  let prevScore=0;
+  let schedIdx=0;
   for(let i=0;i<series.length;i++){
     const row=series[i]; const price=row.close; const date=row.date;
     if(set.has(date)){
-      bank+=p.base;
-      const ema=emaArr[i];
-      const s1=ema? -Math.tanh(((price-ema)/ema)/p.sensTrend):0;
-      const avgCost=btc>0?invested/btc:null;
-      const s2=avgCost? -Math.tanh(((price-avgCost)/avgCost)/p.sensCost):0;
-      const rsi=rsiArr[i];
-      let s3=0; if(rsi!=null){ if(rsi<=30) s3=1; else if(rsi>=70) s3=-1; else s3=(50-rsi)/20; }
-      const scoreRaw=(p.wTrend*s1+p.wCost*s2+p.wRsi*s3)/wSum;
-      const score=clamp((1-p.alpha)*prevScore+p.alpha*scoreRaw,-1,1); prevScore=score;
-      const rmin=p.base>0?(p.min/p.base):0;
-      const rmax=p.base>0?(p.max/p.base):1;
-      const f=score>=0?1+score*(rmax-1):1+score*(1-rmin);
-      let desired=clamp(f*p.base,p.min,p.max);
-      const afford=bank+(p.overdraft||0);
-      let invest=Math.min(desired,afford);
-      invest=Math.max(invest,Math.min(p.min,afford));
-      invest=roundToStep(invest,p.step);
-      if(invest<=0){
-        if(bank<bankMin) bankMin=bank;
-        log.push({date, price:safe(price), invested:0, totalInvested:safe(invested), value:safe(btc*price), score:safe(score), s1:safe(s1), s2:safe(s2), s3:safe(s3), f:safe(f), bank:safe(bank)});
-      }else{
-        bank-=invest; if(bank<bankMin) bankMin=bank;
-        let qty=invest/price; if(!Number.isFinite(qty)) qty=0;
-        if(qty>0){ btc+=qty; invested+=invest; if(!firstBuyDate) firstBuyDate=date; }
-        multSum+=p.base>0?invest/p.base:0;
-        if(Math.abs(invest-p.min)<=EPS) hitsMin++;
-        if(Math.abs(invest-p.max)<=EPS) hitsMax++;
-        const value=btc*price;
-        log.push({date, price:safe(price), invested:safe(invest), totalInvested:safe(invested), value:safe(value), score:safe(score), s1:safe(s1), s2:safe(s2), s3:safe(s3), f:safe(f), bank:safe(bank)});
+      weeklySoldUSD=0;
+      if(params.sellEn){
+        const ph=phase[i];
+        if(['BULL_LATE','DISTRIBUTION','BEAR_EARLY'].includes(ph)){
+          const r=rsi[i];
+          let tier=0;
+          if(r!=null){
+            if(r>=params.ob3) tier=3;
+            else if(r>=params.ob2) tier=2;
+            else if(r>=params.ob1) tier=1;
+          }
+          const cooldownOk=(schedIdx-lastSellIdx)>=params.coolW;
+          const pgOk=avgCost>0?price>=avgCost*(1+params.profitGuard/100):true;
+          if(tier>0 && btc>0 && cooldownOk && weeklySoldUSD<params.maxSellW && pgOk){
+            const remaining=(params.maxSellW-weeklySoldUSD)/price;
+            const pct=[0,params.sL1,params.sL2,params.sL3][tier]/100;
+            let qty=Math.min(btc*pct,remaining);
+            const proceeds=qty*price;
+            if(proceeds>=params.minSell && qty>0){
+              btc-=qty; if(btc<1e-9) btc=0;
+              bank+=proceeds;
+              soldUSD+=proceeds;
+              weeklySoldUSD+=proceeds;
+              lastSellIdx=schedIdx;
+              log.push({idx:schedIdx,date,price:safe(price),invested:safe(-proceeds),totalInvested:safe(invested),value:safe(btc*price),score:0,s1:0,s2:0,s3:0,f:0,bank:safe(bank),type:'Sell'});
+            }
+          }
+        }
       }
+
+      const ema=emaFast[i];
+      const s1=ema? -Math.tanh(((price-ema)/ema)/params.sensTrend):0;
+      const s2=avgCost? -Math.tanh(((price-avgCost)/avgCost)/params.sensCost):0;
+      const r=rsi[i];
+      let s3=0; if(r!=null){ if(r<=30) s3=1; else if(r>=70) s3=-1; else s3=(50-r)/20; }
+      const scoreRaw=params.wTrend*s1+params.wCost*s2+params.wRsi*s3+(phaseScore[i]||0);
+      const score=clamp((1-params.alpha)*prevScore+params.alpha*scoreRaw,-1,1); prevScore=score;
+      const k=0.30;
+      const m_raw=1+k*score;
+      const m_clamped=clamp(m_raw,params.min/params.base,params.max/params.base);
+      let target=roundToStep(params.base*m_clamped,params.step);
+      const reserveUSD=(params.bankReserve/100)*(params.base*4);
+      const overdraft=((phase[i]==='BEAR_EARLY'||phase[i]==='BEAR_LATE') && r<40)?params.overdraft:0;
+      const cashAvailable=params.base+bank+overdraft;
+      if(bank-(target-params.base)<reserveUSD && phase[i]!=='BEAR_LATE'){
+        const maxInvest=bank-reserveUSD+params.base;
+        target=roundToStep(clamp(maxInvest,params.min,params.max),params.step);
+      }
+      let invest=Math.min(target,cashAvailable);
+      if(invest<0) invest=0;
+      const qtyBuy=invest/price;
+      if(qtyBuy>0){
+        btc+=qtyBuy;
+        bank+=params.base-invest;
+        invested+=invest;
+        avgCost=btc>1e-9?invested/btc:0;
+        multSum+=params.base>0?invest/params.base:0;
+        if(Math.abs(invest-params.min)<=EPS) hitsMin++;
+        if(Math.abs(invest-params.max)<=EPS) hitsMax++;
+        if(!firstBuyDate) firstBuyDate=date;
+        log.push({idx:schedIdx,date,price:safe(price),invested:safe(invest),totalInvested:safe(invested),value:safe(btc*price),score:safe(score),s1:safe(s1),s2:safe(s2),s3:safe(s3),f:safe(m_clamped),bank:safe(bank),type:'Buy'});
+      }else{
+        bank+=params.base;
+        log.push({idx:schedIdx,date,price:safe(price),invested:0,totalInvested:safe(invested),value:safe(btc*price),score:safe(score),s1:safe(s1),s2:safe(s2),s3:safe(s3),f:safe(m_clamped),bank:safe(bank),type:'Buy'});
+      }
+      if(bank<bankMin) bankMin=bank;
+      schedIdx++;
     }
     invS.push({date, invested:safe(invested)});
+    netInvS.push({date, invested:safe(invested-soldUSD)});
     port.push({date, price:safe(price), value:safe(btc*price), invested:safe(invested)});
   }
-  const lastEntry=series[series.length-1]; const last=lastEntry.close;
-  const finalVal=btc*last;
-  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:null, lastPrice:last, lastPriceDate:lastEntry.date, value:Number.isFinite(finalVal)?finalVal:null,
-           firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS,
-           bankFinal:bank, bankMin, avgMultiplier:schedule.length?multSum/schedule.length:0, hitsMin, hitsMax };
+  const lastEntry=series[series.length-1];
+  const last=lastEntry?lastEntry.close:null;
+  const lastDate=lastEntry?lastEntry.date:null;
+  const finalVal=btc*(last||0);
+  return { scheduleCount:schedule.length, invested, soldUSD, netInvested:invested-soldUSD, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastDate, value:Number.isFinite(finalVal)?finalVal:null,
+           firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS, netInvestedSeries:netInvS,
+           bankFinal:bank, bankMin, avgMultiplier:schedIdx?multSum/schedIdx:0, hitsMin, hitsMax };
 }
 
 function createWorkspaceC(prefix){
@@ -1323,9 +1402,8 @@ function createWorkspaceC(prefix){
       el('k_bankMin').textContent=Number.isFinite(r.bankMin)?compactUSD(r.bankMin):'—';
       el('k_avgMult').textContent=Number.isFinite(r.avgMultiplier)?fmt(r.avgMultiplier,2):'—';
       el('k_hits').textContent=(Number.isFinite(r.hitsMin)&&Number.isFinite(r.hitsMax))?`${r.hitsMin} / ${r.hitsMax}`:'—';
-      el('k_sells').textContent=Number.isFinite(r.soldUSD)?compactUSD(r.soldUSD):'—';
-      const netInv=(r.invested||0)-(r.soldUSD||0);
-      el('k_net').textContent=Number.isFinite(netInv)?compactUSD(netInv):'—';
+      el('k_sells').textContent=(r.soldUSD>0)?compactUSD(r.soldUSD):'—';
+      el('k_net').textContent=Number.isFinite(r.netInvested)?compactUSD(r.netInvested):'—';
 
       const ab=[['k_trades_ab',res=>{if(!res) return null; const c=res.scheduleCount!==undefined?res.scheduleCount:(res.logRows?res.logRows.filter(x=>x.invested>0).length:0); return fmt(c,0);}],
                 ['k_invested_ab',res=>res?compactUSD(res.invested):null],
@@ -1375,10 +1453,10 @@ function createWorkspaceC(prefix){
       Object.assign(stateC.params,stateC.paramsDraft);
       let r;
       try{
-        const params={ base:this.base, min:this.min, max:this.max, overdraft:this.overdraft, step:this.step, ema:this.ema, rsi:this.rsi,
+        const params={...stateC.params, ema:this.ema, rsi:this.rsi,
                        sensTrend:this.sensTrend, sensCost:this.sensCost, wTrend:this.wTrend, wCost:this.wCost, wRsi:this.wRsi,
                        alpha:this.alpha };
-        r=runWDCA(base,this.frequency,params,sISO,eISO);
+        r=runWDCA(this.frequency,params,sISO,eISO);
       } catch(err){
         console.error('[Backtest '+prefix.toUpperCase()+']',err);
         setStatus(prefix,'Error: '+err.message);
