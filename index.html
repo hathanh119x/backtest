@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.5</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.6</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
   }
   html,body{ background:var(--bg); color:var(--txt); font-family:Inter, system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"; font-size:14px; }
   .panel{ background: var(--panel);
-          border:1px solid var(--stroke); border-radius:var(--radius); box-shadow:var(--shadow); }
+          border:1px solid var(--stroke); border-radius:var(--radius); box-shadow:var(--shadow); position:relative; }
   .chip{ font-size:.72rem; padding:.28rem .6rem; border-radius:999px; background:var(--chip-bg); border:1px solid var(--stroke-2); color:var(--muted) }
 
   /* ---------- Fields ---------- */
@@ -104,6 +104,17 @@
   /* ---------- KPI ---------- */
   .kpi .label{ font-size:.68rem; letter-spacing:.06em; text-transform:uppercase; color:var(--muted) }
   .kpi .value{ font-weight:800; font-size:1.06rem; white-space:nowrap }
+  .kpi-ab {
+    position:absolute;
+    right:.5rem;
+    bottom:.45rem;
+    font-size:.65rem;
+    color:var(--muted);
+    pointer-events:none;
+  }
+
+  .rsi-embed{ padding-left:0; padding-right:0; }
+  canvas{ box-sizing:border-box; }
 
   /* ---------- Table ---------- */
   table{ width:100%; border-collapse:separate; border-spacing:0 }
@@ -159,7 +170,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.4.5</span>
+        <span class="chip">Dual v1.4.6</span>
         <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
@@ -581,12 +592,12 @@
       <section id="c_kpi" class="results">
         <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
           <div class="panel p-3.5"><div class="label">Duration</div><div id="c_k_duration" class="value mt-1">-</div></div>
-            <div class="panel p-3.5"><div class="label">Buys</div><div id="c_k_trades" class="value mt-1">-</div><div id="c_k_trades_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
-            <div class="panel p-3.5"><div class="label">Total invested</div><div id="c_k_invested" class="value mt-1">-</div><div id="c_k_invested_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
-            <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="c_k_btc" class="value mt-1">-</div><div id="c_k_btc_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
-            <div class="panel p-3.5"><div class="label">Average cost</div><div id="c_k_avg" class="value mt-1">-</div><div id="c_k_avg_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
-            <div class="panel p-3.5"><div class="label">Final value</div><div id="c_k_value" class="value mt-1">-</div><div id="c_k_value_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
-            <div class="panel p-3.5"><div class="label">Return</div><div id="c_k_pnl" class="value mt-1">-</div><div id="c_k_pnl_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
+            <div class="panel p-3.5"><div class="label">Buys</div><div id="c_k_trades" class="value mt-1">-</div><div class="kpi-ab" id="c_k_trades_ab"></div></div>
+            <div class="panel p-3.5"><div class="label">Total invested</div><div id="c_k_invested" class="value mt-1">-</div><div class="kpi-ab" id="c_k_invested_ab"></div></div>
+            <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="c_k_btc" class="value mt-1">-</div><div class="kpi-ab" id="c_k_btc_ab"></div></div>
+            <div class="panel p-3.5"><div class="label">Average cost</div><div id="c_k_avg" class="value mt-1">-</div><div class="kpi-ab" id="c_k_avg_ab"></div></div>
+            <div class="panel p-3.5"><div class="label">Final value</div><div id="c_k_value" class="value mt-1">-</div><div class="kpi-ab" id="c_k_value_ab"></div></div>
+            <div class="panel p-3.5"><div class="label">Return</div><div id="c_k_pnl" class="value mt-1">-</div><div class="kpi-ab" id="c_k_pnl_ab"></div></div>
           <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="c_k_vsls" class="value mt-1">-</div></div>
         </div>
         <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -595,7 +606,6 @@
           <div class="panel p-3.5"><div class="label">Avg multiplier</div><div id="c_k_avgMult" class="value mt-1">-</div></div>
           <div class="panel p-3.5"><div class="label">At min / At max</div><div id="c_k_hits" class="value mt-1">-</div></div>
         </div>
-        <div id="c_compare" class="flex gap-2 flex-wrap justify-end mt-2"></div>
       </section>
 
       <div class="chip mb-2">Charts</div>
@@ -702,7 +712,13 @@ const rsiAlertPlugin={id:'rsiAlert',beforeDatasetsDraw(chart,args,opts){
   }
   ctx.restore();
 }};
-Chart.register(crosshairPlugin,rsiAlertPlugin);
+const rsiAligner={id:'rsiAligner',afterLayout(chart,_args,opts){
+  if(!opts||!opts.main||!opts.main.chartArea) return;
+  const ca=opts.main.chartArea;
+  chart.options.layout=chart.options.layout||{};
+  chart.options.layout.padding={left:ca.left,right:opts.main.width-ca.right};
+}};
+Chart.register(crosshairPlugin,rsiAlertPlugin,rsiAligner);
 
 /* ===== Shared state & helpers ===== */
 let RAW=[], PRICE_MAP=null;
@@ -712,36 +728,53 @@ const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const getI=(p,id)=>document.getElementById(p+'_'+id);
 const setI=(p,id,v)=>{ const el=getI(p,id); if(el) el.value=v; };
-function roundToStep(x,step){ return step>0 ? Math.round(x/step)*step : Math.round(x); }
+let WDCA_SYNCING=false;
+function roundToStep(x,step){ step=Number(step)||1; return Math.round(x/step)*step; }
 function showAmtHint(prefix,clamped){ const h=getI(prefix,'amtHint'); if(h) h.textContent=clamped?'Adjusted to limits':''; }
 function syncRatiosFromAmounts(prefix){
-  const base=+getI(prefix,'base').value||0;
-  let min=+getI(prefix,'min').value||0;
-  let max=+getI(prefix,'max').value||0;
-  let clamped=false;
-  if(min<0){min=0;clamped=true;}
-  if(max<min){max=min;clamped=true;}
-  setI(prefix,'min',min); setI(prefix,'max',max);
-  if(base>0){
-    setI(prefix,'minRatio',(min/base).toFixed(2));
-    setI(prefix,'maxRatio',(max/base).toFixed(2));
-  }
-  showAmtHint(prefix,clamped);
+  if(WDCA_SYNCING) return; WDCA_SYNCING=true;
+  try{
+    const base=+getI(prefix,'base').value||0;
+    let min=+getI(prefix,'min').value||0;
+    let max=+getI(prefix,'max').value||0;
+    let clamped=false;
+    if(min<0){min=0;clamped=true;}
+    if(max<min){max=min;clamped=true;}
+    getI(prefix,'min').value=+min.toFixed(0);
+    getI(prefix,'max').value=+max.toFixed(0);
+    if(base>0){
+      getI(prefix,'minRatio').value=+(min/base).toFixed(2);
+      getI(prefix,'maxRatio').value=+(max/base).toFixed(2);
+    } else {
+      getI(prefix,'minRatio').value=0;
+      getI(prefix,'maxRatio').value=0;
+    }
+    showAmtHint(prefix,clamped);
+  } finally { WDCA_SYNCING=false; }
 }
 function syncAmountsFromRatios(prefix){
-  const base=+getI(prefix,'base').value||0, step=+getI(prefix,'step').value||0;
-  let rmin=+getI(prefix,'minRatio').value||0, rmax=+getI(prefix,'maxRatio').value||0;
-  const origRmin=rmin, origRmax=rmax;
-  rmin=Math.max(0,Math.min(rmin,1));
-  rmax=Math.max(1,rmax);
-  const min=roundToStep(base*rmin,step);
-  const max=roundToStep(base*rmax,step);
-  setI(prefix,'min',min); setI(prefix,'max',max);
-  setI(prefix,'minRatio',rmin.toFixed(2));
-  setI(prefix,'maxRatio',rmax.toFixed(2));
-  const clamped=(rmin!==origRmin)||(rmax!==origRmax);
-  showAmtHint(prefix,clamped);
+  if(WDCA_SYNCING) return; WDCA_SYNCING=true;
+  try{
+    const base=+getI(prefix,'base').value||0;
+    const step=+getI(prefix,'step').value||1;
+    let rmin=+getI(prefix,'minRatio').value||0;
+    let rmax=+getI(prefix,'maxRatio').value||0;
+    const origRmin=rmin, origRmax=rmax;
+    rmin=Math.max(0,Math.min(rmin,1));
+    rmax=Math.max(1,rmax);
+    let min=base>0?base*rmin:0;
+    let max=base>0?base*rmax:0;
+    min=roundToStep(min,step);
+    max=roundToStep(max,step);
+    getI(prefix,'min').value=+min.toFixed(0);
+    getI(prefix,'max').value=+max.toFixed(0);
+    getI(prefix,'minRatio').value=+rmin.toFixed(2);
+    getI(prefix,'maxRatio').value=+rmax.toFixed(2);
+    const clamped=(rmin!==origRmin)||(rmax!==origRmax);
+    showAmtHint(prefix,clamped);
+  } finally { WDCA_SYNCING=false; }
 }
+function onBaseChange(prefix){ syncAmountsFromRatios(prefix); }
 const WDCA_PRESETS={
   Conservative:{ base:100,minRatio:0.70,maxRatio:2.20, overdraft:0, step:5,
     ema:100,rsi:14,sensTrend:0.10,sensCost:0.12,wTrend:0.5,wCost:0.3,wRsi:0.2,alpha:0.25 },
@@ -1075,7 +1108,7 @@ function createWorkspaceC(prefix){
             y:{min:0,max:100,ticks:{color:tc.tick},grid:{color:tc.gridStrong}},
             x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}
           },
-          plugins:{tooltip:{enabled:false},legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}}
+          plugins:{tooltip:{enabled:false},legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans},rsiAligner:{main:this.chartMain}}
         }
       });
       requestAnimationFrame(()=>alignRsi(this.chartMain,this.chartRSI));
@@ -1129,13 +1162,6 @@ function createWorkspaceC(prefix){
         tbody.appendChild(tr);
       });
 
-      const cmp=document.getElementById('c_compare'); cmp.innerHTML='';
-      [['A',WSA.lastResult],['B',WSB.lastResult]].forEach(([lab,res])=>{
-        if(res){
-          const pct=res.invested>0?(res.value/res.invested-1)*100:null;
-          if(pct!=null){ const chip=document.createElement('div'); chip.className='chip'; chip.textContent=`${lab} ${pct>=0?'+':''}${fmt(pct,2)}%`; cmp.appendChild(chip); }
-        }
-      });
     },
 
     run(){
@@ -1180,7 +1206,7 @@ function createWorkspaceC(prefix){
       ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_bankFinal','k_bankMin','k_avgMult','k_hits'].forEach(id=>{ el(id).textContent='-'; });
       ['k_trades_ab','k_invested_ab','k_btc_ab','k_avg_ab','k_value_ab','k_pnl_ab'].forEach(id=>{ el(id).textContent=''; });
       el('amtHint').textContent='';
-      el('log').innerHTML=''; document.getElementById('c_compare').innerHTML='';
+      el('log').innerHTML='';
       this.updateRangeHint();
       debouncedMH();
     },
@@ -1192,15 +1218,13 @@ function createWorkspaceC(prefix){
         document.getElementById(prefix+'_runBtn').addEventListener('click',()=>self.run());
         document.getElementById(prefix+'_resetBtn').addEventListener('click',()=>self.reset());
         ['maOn','emaOn','rsiOn','rsiAlertOn','maPeriod','emaPeriod','rsiPeriod','rsiNear'].forEach(id=>{ el(id).addEventListener('change',()=>self.refreshIndicatorsOnly()); });
-        ['base','min','max','step'].forEach(id=>{
+        ['min','max','step'].forEach(id=>{
           el(id).addEventListener('input',()=>syncRatiosFromAmounts(prefix));
-          el(id).addEventListener('change',()=>syncRatiosFromAmounts(prefix));
         });
         ['minRatio','maxRatio'].forEach(id=>{
           el(id).addEventListener('input',()=>syncAmountsFromRatios(prefix));
-          el(id).addEventListener('change',()=>syncAmountsFromRatios(prefix));
         });
-        el('base').addEventListener('change',()=>syncAmountsFromRatios(prefix));
+        el('base').addEventListener('input',()=>onBaseChange(prefix));
         el('preset').addEventListener('change',()=>{
           const sel=el('preset').value; const key=sel.charAt(0).toUpperCase()+sel.slice(1);
           const cfg=WDCA_PRESETS[key];
@@ -1406,7 +1430,7 @@ function createWorkspace(prefix){
             y:{ min:0, max:100, ticks:{ color:tc.tick }, grid:{ color:tc.gridStrong } },
             x:{ grid:{ color:tc.gridWeak, drawTicks:false }, ticks:{ color:tc.tick, maxTicksLimit:10, display:false } }
           },
-          plugins:{ tooltip:{enabled:false}, legend:{ labels:{ color:tc.tick, font:{ size:11 } } }, rsiAlert:{ enabled:this.rsiAlertOn, spans:rsiSpans } }
+          plugins:{ tooltip:{enabled:false}, legend:{ labels:{ color:tc.tick, font:{ size:11 } } }, rsiAlert:{ enabled:this.rsiAlertOn, spans:rsiSpans }, rsiAligner:{ main:this.chartMain } }
         }
       });
       requestAnimationFrame(()=>alignRsi(this.chartMain,this.chartRSI));
@@ -1544,19 +1568,45 @@ function getDataMeta(){
   if(!RAW.length) return null;
   return { firstDate:new Date(RAW[0].date), lastDate:new Date(RAW[RAW.length-1].date) };
 }
+function toISO(d){
+  const z=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`;
+}
 function setDateInputs(prefix,start,end){
-  const ws=prefix==='a'?WSA:prefix==='b'?WSB:WSC; ws.ensurePickers();
-  ws.fpStart.setDate(start,true); ws.fpEnd.setDate(end,true);
+  const ws=prefix==='a'?WSA:prefix==='b'?WSB:WSC;
+  if(ws.ensurePickers) ws.ensurePickers();
+  const sISO=start instanceof Date?toISO(start):start;
+  const eISO=end   instanceof Date?toISO(end):end;
+
+  if(ws.fpStart && ws.fpStart.setDate) ws.fpStart.setDate(sISO,true);
+  else{
+    const sid=prefix==='c'?'start':'startDate';
+    const el=document.getElementById(`${prefix}_${sid}`);
+    if(el) el.value=sISO;
+  }
+  if(ws.fpEnd && ws.fpEnd.setDate) ws.fpEnd.setDate(eISO,true);
+  else{
+    const eid=prefix==='c'?'end':'endDate';
+    const el=document.getElementById(`${prefix}_${eid}`);
+    if(el) el.value=eISO;
+  }
+  onDateChange(prefix);
 }
 function onDateChange(prefix){
   const ws=prefix==='a'?WSA:prefix==='b'?WSB:WSC; ws.updateRangeHint(); debouncedMH();
 }
 function applyQuickRange(prefix,span){
   const meta=getDataMeta(); if(!meta) return; const end=meta.lastDate; let start;
-  if(span==='2015'){ start=new Date(2015,0,1); }
-  else{ const n=+span[0]; start=new Date(end); start.setFullYear(end.getFullYear()-n); }
-  if(start<meta.firstDate) start=meta.firstDate;
-  setDateInputs(prefix,start,end); onDateChange(prefix);
+  if(span==='2015'){
+    const floor=new Date(2015,0,1);
+    start=meta.firstDate>floor?meta.firstDate:floor;
+  } else {
+    const n=parseInt(span,10);
+    start=new Date(end);
+    start.setFullYear(start.getFullYear()-n);
+    if(start<meta.firstDate) start=meta.firstDate;
+  }
+  setDateInputs(prefix,start,end);
 }
 
 document.getElementById('themeSwitch').addEventListener('click', ()=>{
