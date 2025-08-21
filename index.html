@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.x</title>
+<title>Bitcoin DCA Backtester — Dual Strategy (Offline) · Dual v1.4.5</title>
 
 <!-- Fonts & UI libs -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -159,7 +159,7 @@
       <div class="flex items-center gap-3 flex-wrap">
         <h1 class="text-2xl md:text-3xl font-extrabold leading-tight">Bitcoin DCA Backtester — Dual Strategy (Offline)</h1>
         <span class="chip">Source: Local JSON (daily close, USD)</span>
-        <span class="chip">Dual v1.4.x</span>
+        <span class="chip">Dual v1.4.5</span>
         <span id="wdcaBadge" class="chip hidden">WDCA beta</span>
       </div>
       <p class="text-sm" style="color:var(--muted)">Load a USD price JSON once. Compare two DCA strategies side-by-side. No internet calls.</p>
@@ -471,9 +471,9 @@
 
       <div class="chip mb-2">Controls</div>
       <section id="c_ctrl" class="controls panel p-4 md:p-5 mb-5">
-        <div class="flex flex-wrap gap-3 items-end mb-3">
-          <div>
-            <div class="label">Repeat</div>
+          <div class="flex flex-wrap gap-3 items-end mb-3">
+            <div>
+              <div class="label">Repeat</div>
             <div class="field">
               <select id="c_freq">
                 <option value="daily">Daily</option>
@@ -503,6 +503,7 @@
             <div class="field"><input id="c_step" class="num-s" type="number" min="0" step="1" value="5" /></div>
           </div>
         </div>
+        <div id="c_amtHint" class="text-xs mt-1" style="color:var(--muted)"></div>
 
         <div class="flex flex-wrap gap-3 items-end mb-3">
           <div>
@@ -580,12 +581,12 @@
       <section id="c_kpi" class="results">
         <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3 mb-3">
           <div class="panel p-3.5"><div class="label">Duration</div><div id="c_k_duration" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Buys</div><div id="c_k_trades" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Total invested</div><div id="c_k_invested" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="c_k_btc" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Average cost</div><div id="c_k_avg" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Final value</div><div id="c_k_value" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Return</div><div id="c_k_pnl" class="value mt-1">-</div></div>
+            <div class="panel p-3.5"><div class="label">Buys</div><div id="c_k_trades" class="value mt-1">-</div><div id="c_k_trades_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
+            <div class="panel p-3.5"><div class="label">Total invested</div><div id="c_k_invested" class="value mt-1">-</div><div id="c_k_invested_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
+            <div class="panel p-3.5"><div class="label">BTC accumulated</div><div id="c_k_btc" class="value mt-1">-</div><div id="c_k_btc_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
+            <div class="panel p-3.5"><div class="label">Average cost</div><div id="c_k_avg" class="value mt-1">-</div><div id="c_k_avg_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
+            <div class="panel p-3.5"><div class="label">Final value</div><div id="c_k_value" class="value mt-1">-</div><div id="c_k_value_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
+            <div class="panel p-3.5"><div class="label">Return</div><div id="c_k_pnl" class="value mt-1">-</div><div id="c_k_pnl_ab" class="text-[0.65rem] text-right mt-1" style="color:var(--muted)"></div></div>
           <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="c_k_vsls" class="value mt-1">-</div></div>
         </div>
         <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3">
@@ -709,6 +710,47 @@ const addDays=(d,x)=>{const t=new Date(d); t.setDate(t.getDate()+x); return t;}
 const addMonths=(d,x)=>{const t=new Date(d); t.setMonth(t.getMonth()+x); return t;}
 const fmt=(n,d=2)=>Number(n).toLocaleString('en-US',{maximumFractionDigits:d});
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const getI=(p,id)=>document.getElementById(p+'_'+id);
+const setI=(p,id,v)=>{ const el=getI(p,id); if(el) el.value=v; };
+function roundToStep(x,step){ return step>0 ? Math.round(x/step)*step : Math.round(x); }
+function showAmtHint(prefix,clamped){ const h=getI(prefix,'amtHint'); if(h) h.textContent=clamped?'Adjusted to limits':''; }
+function syncRatiosFromAmounts(prefix){
+  const base=+getI(prefix,'base').value||0;
+  let min=+getI(prefix,'min').value||0;
+  let max=+getI(prefix,'max').value||0;
+  let clamped=false;
+  if(min<0){min=0;clamped=true;}
+  if(max<min){max=min;clamped=true;}
+  setI(prefix,'min',min); setI(prefix,'max',max);
+  if(base>0){
+    setI(prefix,'minRatio',(min/base).toFixed(2));
+    setI(prefix,'maxRatio',(max/base).toFixed(2));
+  }
+  showAmtHint(prefix,clamped);
+}
+function syncAmountsFromRatios(prefix){
+  const base=+getI(prefix,'base').value||0, step=+getI(prefix,'step').value||0;
+  let rmin=+getI(prefix,'minRatio').value||0, rmax=+getI(prefix,'maxRatio').value||0;
+  const origRmin=rmin, origRmax=rmax;
+  rmin=Math.max(0,Math.min(rmin,1));
+  rmax=Math.max(1,rmax);
+  const min=roundToStep(base*rmin,step);
+  const max=roundToStep(base*rmax,step);
+  setI(prefix,'min',min); setI(prefix,'max',max);
+  setI(prefix,'minRatio',rmin.toFixed(2));
+  setI(prefix,'maxRatio',rmax.toFixed(2));
+  const clamped=(rmin!==origRmin)||(rmax!==origRmax);
+  showAmtHint(prefix,clamped);
+}
+const WDCA_PRESETS={
+  Conservative:{ base:100,minRatio:0.70,maxRatio:2.20, overdraft:0, step:5,
+    ema:100,rsi:14,sensTrend:0.10,sensCost:0.12,wTrend:0.5,wCost:0.3,wRsi:0.2,alpha:0.25 },
+  Standard:{ base:100,minRatio:0.50,maxRatio:3.00, overdraft:0, step:5,
+    ema:50,rsi:14,sensTrend:0.08,sensCost:0.10,wTrend:0.5,wCost:0.3,wRsi:0.2,alpha:0.35 },
+  Aggressive:{ base:100,minRatio:0.40,maxRatio:3.50, overdraft:200, step:5,
+    ema:50,rsi:14,sensTrend:0.06,sensCost:0.08,wTrend:0.45,wCost:0.35,wRsi:0.2,alpha:0.45 }
+};
+function alignRsi(main,rsi){ if(!main||!rsi) return; const ca=main.chartArea; rsi.options.layout=rsi.options.layout||{}; rsi.options.layout.padding={left:ca.left,right:main.width-ca.right}; rsi.update('none'); }
 function compactUSD(x){ const abs=Math.abs(x), u=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
   for(const k of u){ if(abs>=k.v) return '$'+(x/k.v).toFixed(abs>=1e9?2:1).replace(/\.0+$/,'')+k.s; }
   return '$'+Number(x).toLocaleString('en-US',{maximumFractionDigits:0}); }
@@ -939,6 +981,7 @@ function createWorkspaceC(prefix){
       const value=series.map(p=>p.value);
       const invested=investedSeries.map(p=>p.invested);
       const tc=themeColors();
+      const tbg=document.documentElement.dataset.theme==='light'?'rgba(255,255,255,0.9)':'rgba(15,23,42,0.85)';
       const datasets=[
         {label:'BTC price (USD)',data:price,yAxisID:'y',borderColor:'#22c55e',pointRadius:0,tension:.25,borderWidth:2,cubicInterpolationMode:'monotone',spanGaps:true},
         {label:'Portfolio value (USD)',data:value,yAxisID:'y1',borderColor:'#60a5fa',pointRadius:0,tension:.25,borderWidth:1.6,cubicInterpolationMode:'monotone',spanGaps:true},
@@ -977,8 +1020,13 @@ function createWorkspaceC(prefix){
           plugins:{
             legend:{labels:{color:tc.tick,font:{size:11}}},
             tooltip:{
+              enabled:true,
               position:'bottomRight',
-              backgroundColor:'#0f172a',borderColor:'#2b3a58',borderWidth:1,padding:10,
+              caretSize:0,
+              displayColors:false,
+              padding:12,
+              backgroundColor:tbg,
+              cornerRadius:8,
               filter:item=>item.datasetIndex<3,
               callbacks:{
                 title:items=>items[0].label,
@@ -1027,31 +1075,45 @@ function createWorkspaceC(prefix){
             y:{min:0,max:100,ticks:{color:tc.tick},grid:{color:tc.gridStrong}},
             x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}
           },
-          plugins:{legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}}
+          plugins:{tooltip:{enabled:false},legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}}
         }
       });
+      requestAnimationFrame(()=>alignRsi(this.chartMain,this.chartRSI));
     },
 
     updateKPI(r,ls){
-      const invested=r.invested, value=r.value;
-      const pnlPct=invested>0?(value/invested-1)*100:null;
+      const invested=r.invested, bank=r.bankFinal, portfolio=r.value;
+      const finalValue=portfolio+bank;
+      const denom=invested+bank;
+      const pnlPct=denom>0?(finalValue/denom-1)*100:null;
       const buyCount=r.scheduleCount;
       const kdur=el('k_duration');
       if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate); else kdur.textContent='—';
       el('k_trades').textContent=fmt(buyCount,0);
-      const kinv=el('k_invested'); kinv.textContent=compactUSD(invested); kinv.title='Net cashflow';
+      const kinv=el('k_invested'); kinv.textContent=compactUSD(invested); kinv.title='Deployed into BTC (excludes bank)';
       el('k_btc').textContent=fmt(r.btc,3);
       el('k_avg').textContent=r.btc>0?compactUSD(r.avgCost):'—';
-      el('k_value').textContent=compactUSD(value);
+      const kval=el('k_value'); kval.textContent=compactUSD(finalValue); kval.title='Portfolio + bank (cash)';
       const kpnl=el('k_pnl');
       if(pnlPct!=null){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
-      else{ kpnl.textContent='—'; kpnl.title='Return undefined when net invested ≤ 0'; }
+      else{ kpnl.textContent='—'; kpnl.title='Return undefined when net invested + bank ≤ 0'; }
       if(ls){ const lsPct=pnlPct!=null?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null?compactPercent(pnlPct-lsPct):'—'; }
       else{ el('k_vsls').textContent='—'; }
       el('k_bankFinal').textContent=compactUSD(r.bankFinal);
       el('k_bankMin').textContent=compactUSD(r.bankMin);
       el('k_avgMult').textContent=fmt(r.avgMultiplier,2);
       el('k_hits').textContent=`${r.hitsMin} / ${r.hitsMax}`;
+
+      const ab=[['k_trades_ab',res=>{if(!res) return null; const c=res.scheduleCount!==undefined?res.scheduleCount:(res.logRows?res.logRows.filter(x=>x.invested>0).length:0); return fmt(c,0);}],
+                ['k_invested_ab',res=>res?compactUSD(res.invested):null],
+                ['k_btc_ab',res=>res?fmt(res.btc,3):null],
+                ['k_avg_ab',res=>res?(res.btc>0?compactUSD(res.avgCost):'—'):null],
+                ['k_value_ab',res=>res?compactUSD(res.value):null],
+                ['k_pnl_ab',res=>{ if(res&&res.invested>0){ const pct=(res.value/res.invested-1)*100; return compactPercent(pct);} return null; }]];
+      ab.forEach(([id,fn])=>{
+        const a=fn(WSA.lastResult), b=fn(WSB.lastResult); const elab=el(id);
+        if(elab){ const parts=[]; if(a!=null) parts.push('A: '+a); if(b!=null) parts.push('B: '+b); elab.textContent=parts.join(' • '); }
+      });
 
       const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
       head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr>';
@@ -1109,25 +1171,42 @@ function createWorkspaceC(prefix){
       if(!RAW.length) return; const min=RAW[0].date, max=RAW[RAW.length-1].date;
       el('freq').value='weekly'; el('base').value=100; el('min').value=50; el('max').value=300; el('overdraft').value=0; el('step').value=5;
       el('ema').value=50; el('rsi').value=14; el('sensTrend').value=0.08; el('sensCost').value=0.10; el('wTrend').value=0.5; el('wCost').value=0.3; el('wRsi').value=0.2; el('alpha').value=0.35; el('minRatio').value=0.5; el('maxRatio').value=3; el('preset').value='standard';
+      syncRatiosFromAmounts(prefix);
       this.ensurePickers(); this.fpStart.setDate(min,true); this.fpEnd.setDate(max,true);
       el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
       el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
       document.getElementById(prefix+'_status').textContent='Ready.';
       this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null;
       ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_bankFinal','k_bankMin','k_avgMult','k_hits'].forEach(id=>{ el(id).textContent='-'; });
+      ['k_trades_ab','k_invested_ab','k_btc_ab','k_avg_ab','k_value_ab','k_pnl_ab'].forEach(id=>{ el(id).textContent=''; });
+      el('amtHint').textContent='';
       el('log').innerHTML=''; document.getElementById('c_compare').innerHTML='';
       this.updateRangeHint();
       debouncedMH();
     },
 
-    bind(){
-      const self=this; this.ensurePickers();
-      document.querySelectorAll('#'+prefix.toUpperCase()+' input, #'+prefix.toUpperCase()+' select').forEach(elm=>{ ['input','change'].forEach(ev=>elm.addEventListener(ev,debouncedMH)); });
-      ['start','end','freq'].forEach(id=>{ el(id).addEventListener('change',()=>{ self.updateRangeHint(); debouncedMH(); }); });
-      document.getElementById(prefix+'_runBtn').addEventListener('click',()=>self.run());
-      document.getElementById(prefix+'_resetBtn').addEventListener('click',()=>self.reset());
-      ['maOn','emaOn','rsiOn','rsiAlertOn','maPeriod','emaPeriod','rsiPeriod','rsiNear'].forEach(id=>{ el(id).addEventListener('change',()=>self.refreshIndicatorsOnly()); });
-    }
+      bind(){
+        const self=this; this.ensurePickers();
+        document.querySelectorAll('#'+prefix.toUpperCase()+' input, #'+prefix.toUpperCase()+' select').forEach(elm=>{ ['input','change'].forEach(ev=>elm.addEventListener(ev,debouncedMH)); });
+        ['start','end','freq'].forEach(id=>{ el(id).addEventListener('change',()=>{ self.updateRangeHint(); debouncedMH(); }); });
+        document.getElementById(prefix+'_runBtn').addEventListener('click',()=>self.run());
+        document.getElementById(prefix+'_resetBtn').addEventListener('click',()=>self.reset());
+        ['maOn','emaOn','rsiOn','rsiAlertOn','maPeriod','emaPeriod','rsiPeriod','rsiNear'].forEach(id=>{ el(id).addEventListener('change',()=>self.refreshIndicatorsOnly()); });
+        ['base','min','max','step'].forEach(id=>{
+          el(id).addEventListener('input',()=>syncRatiosFromAmounts(prefix));
+          el(id).addEventListener('change',()=>syncRatiosFromAmounts(prefix));
+        });
+        ['minRatio','maxRatio'].forEach(id=>{
+          el(id).addEventListener('input',()=>syncAmountsFromRatios(prefix));
+          el(id).addEventListener('change',()=>syncAmountsFromRatios(prefix));
+        });
+        el('base').addEventListener('change',()=>syncAmountsFromRatios(prefix));
+        el('preset').addEventListener('change',()=>{
+          const sel=el('preset').value; const key=sel.charAt(0).toUpperCase()+sel.slice(1);
+          const cfg=WDCA_PRESETS[key];
+          if(cfg){ Object.entries(cfg).forEach(([k,v])=>setI(prefix,k,v)); syncAmountsFromRatios(prefix); }
+        });
+      }
   };
   ws.bind(); return ws;
 }
@@ -1232,6 +1311,7 @@ function createWorkspace(prefix){
       const value    = series.map(p=>p.value);
       const invested = investedSeries.map(p=>p.invested);
       const tc = themeColors();
+      const tbg=document.documentElement.dataset.theme==='light'?'rgba(255,255,255,0.9)':'rgba(15,23,42,0.85)';
 
       const datasets = [
         { label:'BTC price (USD)', data:price, yAxisID:'y',  borderColor:'#22c55e', pointRadius:0, tension:.25, borderWidth:2,   cubicInterpolationMode:'monotone', spanGaps:true },
@@ -1271,8 +1351,13 @@ function createWorkspace(prefix){
           plugins:{
             legend:{ labels:{ color:tc.tick, font:{ size:11 } } },
             tooltip:{
+              enabled:true,
               position:'bottomRight',
-              backgroundColor:'#0f172a', borderColor:'#2b3a58', borderWidth:1, padding:10,
+              caretSize:0,
+              displayColors:false,
+              padding:12,
+              backgroundColor:tbg,
+              cornerRadius:8,
               filter:item=>item.datasetIndex<3,
               callbacks:{
                 title:items => items[0].label,
@@ -1321,9 +1406,10 @@ function createWorkspace(prefix){
             y:{ min:0, max:100, ticks:{ color:tc.tick }, grid:{ color:tc.gridStrong } },
             x:{ grid:{ color:tc.gridWeak, drawTicks:false }, ticks:{ color:tc.tick, maxTicksLimit:10, display:false } }
           },
-          plugins:{ legend:{ labels:{ color:tc.tick, font:{ size:11 } } }, rsiAlert:{ enabled:this.rsiAlertOn, spans:rsiSpans } }
+          plugins:{ tooltip:{enabled:false}, legend:{ labels:{ color:tc.tick, font:{ size:11 } } }, rsiAlert:{ enabled:this.rsiAlertOn, spans:rsiSpans } }
         }
       });
+      requestAnimationFrame(()=>alignRsi(this.chartMain,this.chartRSI));
     }, // end renderCharts
 
     updateKPI(r,ls,mode){
@@ -1449,6 +1535,8 @@ function copyConfig(from,to){
   debouncedMH();
 }
 const WSA=createWorkspace('a'); const WSB=createWorkspace('b'); const WSC=createWorkspace('c');
+function syncAllRsi(){ [WSA,WSB,WSC].forEach(ws=>{ if(ws.chartMain&&ws.chartRSI) alignRsi(ws.chartMain,ws.chartRSI); }); }
+window.addEventListener('resize',syncAllRsi);
 document.getElementById('copyAtoB').addEventListener('click', ()=>copyConfig('a','b'));
 document.getElementById('copyBtoA').addEventListener('click', ()=>copyConfig('b','a'));
 
@@ -1477,17 +1565,25 @@ document.getElementById('themeSwitch').addEventListener('click', ()=>{
   localStorage.theme=next;
   updateChartTheme(WSA); updateChartTheme(WSB); updateChartTheme(WSC);
   WSA.refreshIndicatorsOnly(); WSB.refreshIndicatorsOnly(); WSC.refreshIndicatorsOnly();
+  syncAllRsi();
   debouncedMH();
 });
 updateChartTheme(WSA); updateChartTheme(WSB); updateChartTheme(WSC);
 
 const grid=document.getElementById('gridWrap');
-function setView(mode){ grid.classList.remove('two','focusA','focusB','wdca'); grid.classList.add(mode); debouncedMH(); }
+function setView(mode){
+  grid.classList.remove('two','focusA','focusB','wdca');
+  grid.classList.add(mode);
+  [WSA,WSB,WSC].forEach(ws=>{ if(ws.chartMain) ws.chartMain.resize(); if(ws.chartRSI) ws.chartRSI.resize(); });
+  syncAllRsi();
+  debouncedMH();
+}
 document.getElementById('focusA').addEventListener('click', ()=>setView('focusA'));
 document.getElementById('focusB').addEventListener('click', ()=>setView('focusB'));
 document.getElementById('splitView').addEventListener('click', ()=>setView('two'));
 document.getElementById('btnWDCA').addEventListener('click', ()=>setView('wdca'));
 debouncedMH();
+syncAllRsi();
 </script>
 </body>
 </html>
