@@ -515,10 +515,6 @@
             <div class="field input-wrap"><input id="c_max" data-testid="c-max" class="num-s" type="text" value="300" /></div>
           </div>
           <div>
-            <div class="label">Overdraft (USD)</div>
-            <div class="field input-wrap"><input id="c_overdraft" data-testid="c-overdraft" class="num-s" type="text" value="0" /></div>
-          </div>
-          <div>
             <div class="label">Step (USD)</div>
             <div class="field input-wrap"><input id="c_step" data-testid="c-step" class="num-s" type="text" value="5" /></div>
           </div>
@@ -527,36 +523,20 @@
 
         <div class="flex flex-wrap gap-3 items-end mb-3">
           <div>
-            <div class="label">EMA period</div>
-            <div class="field"><input id="c_ema" class="num-s" type="number" min="2" step="1" value="50" /></div>
+            <div class="label">RSI Period</div>
+            <div class="field input-wrap"><input id="c_rsiPeriod" class="num-s" type="number" value="14" /></div>
           </div>
           <div>
-            <div class="label">RSI period</div>
-            <div class="field"><input id="c_rsi" class="num-s" type="number" min="2" step="1" value="14" /></div>
+            <div class="label">RSI Oversold</div>
+            <div class="field input-wrap"><input id="c_rsiOS" class="num-s" type="number" value="30" /></div>
           </div>
           <div>
-            <div class="label">Sens. trend</div>
-            <div class="field"><input id="c_sensTrend" class="num-s" type="number" step="0.01" value="0.08" /></div>
+            <div class="label">RSI Overbought</div>
+            <div class="field input-wrap"><input id="c_rsiOB" class="num-s" type="number" value="70" /></div>
           </div>
           <div>
-            <div class="label">Sens. cost</div>
-            <div class="field"><input id="c_sensCost" class="num-s" type="number" step="0.01" value="0.10" /></div>
-          </div>
-          <div>
-            <div class="label">wTrend</div>
-            <div class="field"><input id="c_wTrend" class="num-s" type="number" step="0.01" value="0.5" /></div>
-          </div>
-          <div>
-            <div class="label">wCost</div>
-            <div class="field"><input id="c_wCost" class="num-s" type="number" step="0.01" value="0.3" /></div>
-          </div>
-          <div>
-            <div class="label">wRSI</div>
-            <div class="field"><input id="c_wRsi" class="num-s" type="number" step="0.01" value="0.2" /></div>
-          </div>
-          <div>
-            <div class="label">Alpha</div>
-            <div class="field"><input id="c_alpha" class="num-s" type="number" step="0.01" value="0.35" /></div>
+            <div class="label">EMA Trend Period</div>
+            <div class="field input-wrap"><input id="c_emaTrend" class="num-s" type="number" value="200" /></div>
           </div>
           <div>
             <div class="label">Preset</div>
@@ -567,75 +547,6 @@
                 <option value="aggressive">Aggressive</option>
               </select>
             </div>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-3 items-end mb-3">
-          <div class="switch">
-            <input type="checkbox" id="c_sellEn"><label for="c_sellEn" style="color:var(--muted)">Sell enabled</label>
-          </div>
-          <div>
-            <div class="label">OB1</div>
-            <div class="field"><input id="c_ob1" class="num-s" type="number" value="72" /></div>
-          </div>
-          <div>
-            <div class="label">OB2</div>
-            <div class="field"><input id="c_ob2" class="num-s" type="number" value="78" /></div>
-          </div>
-          <div>
-            <div class="label">OB3</div>
-            <div class="field"><input id="c_ob3" class="num-s" type="number" value="84" /></div>
-          </div>
-          <div>
-            <div class="label">L1 %</div>
-            <div class="field"><input id="c_sL1" class="num-s" type="number" value="5" /></div>
-          </div>
-          <div>
-            <div class="label">L2 %</div>
-            <div class="field"><input id="c_sL2" class="num-s" type="number" value="10" /></div>
-          </div>
-          <div>
-            <div class="label">L3 %</div>
-            <div class="field"><input id="c_sL3" class="num-s" type="number" value="15" /></div>
-          </div>
-          <div>
-            <div class="label">Profit guard %</div>
-            <div class="field"><input id="c_profitGuard" class="num-s" type="number" value="4" /></div>
-          </div>
-          <div>
-            <div class="label">Min sell USD</div>
-            <div class="field"><input id="c_minSell" class="num-s" type="number" value="25" /></div>
-          </div>
-          <div>
-            <div class="label">Max sell/week</div>
-            <div class="field"><input id="c_maxSellW" class="num-s" type="number" value="2000" /></div>
-          </div>
-          <div>
-            <div class="label">Cooldown weeks</div>
-            <div class="field"><input id="c_coolW" class="num-s" type="number" value="1" /></div>
-          </div>
-        </div>
-
-        <div class="flex flex-wrap gap-3 items-end mb-3">
-          <div>
-            <div class="label">Phase lookback</div>
-            <div class="field"><input id="c_phaseLB" class="num-s" type="number" value="20" /></div>
-          </div>
-          <div>
-            <div class="label">Phase cut up</div>
-            <div class="field"><input id="c_phaseCutUp" class="num-s" type="number" step="0.01" value="0.25" /></div>
-          </div>
-          <div>
-            <div class="label">Phase boost dn</div>
-            <div class="field"><input id="c_phaseBoostDn" class="num-s" type="number" step="0.01" value="0.35" /></div>
-          </div>
-          <div>
-            <div class="label">Bank reserve %</div>
-            <div class="field"><input id="c_bankReserve" class="num-s" type="number" value="30" /></div>
-          </div>
-          <div>
-            <div class="label">Bank cap</div>
-            <div class="field"><input id="c_bankCap" class="num-s" type="number" value="10" /></div>
           </div>
         </div>
 
@@ -671,12 +582,9 @@
           <div class="panel p-3.5"><div class="label">vs. Lump-sum</div><div id="c_k_vsls" class="value mt-1">-</div></div>
         </div>
         <div class="kpi grid grid-cols-2 lg:grid-cols-4 gap-3">
-          <div class="panel p-3.5"><div class="label">Bank (final)</div><div id="c_k_bankFinal" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Bank (min)</div><div id="c_k_bankMin" class="value mt-1">-</div></div>
+          <div class="panel p-3.5"><div class="label">Savings (final)</div><div id="c_k_savings" class="value mt-1">-</div></div>
           <div class="panel p-3.5"><div class="label">Avg multiplier</div><div id="c_k_avgMult" class="value mt-1">-</div></div>
           <div class="panel p-3.5"><div class="label">At min / At max</div><div id="c_k_hits" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Sells (USD)</div><div id="c_k_sells" class="value mt-1">-</div></div>
-          <div class="panel p-3.5"><div class="label">Net invested</div><div id="c_k_net" class="value mt-1">-</div></div>
         </div>
       </section>
 
@@ -702,13 +610,18 @@
           <div class="ind-card">
             <div class="switch">
               <input type="checkbox" id="c_rsiOn" checked><label for="c_rsiOn" style="color:var(--muted)">RSI</label>
-              <input id="c_rsiPeriod" type="number" min="2" value="14" class="field num-s" />
+              <input id="c_rsiPeriodInd" type="number" min="2" value="14" class="field num-s" />
             </div>
           </div>
           <div class="ind-card">
             <div class="switch">
               <input type="checkbox" id="c_rsiAlertOn" checked><label for="c_rsiAlertOn" style="color:var(--muted)">RSI alerts</label>
               <input id="c_rsiNear" type="number" min="0" value="2" class="field num-s" />
+            </div>
+          </div>
+          <div class="ind-card">
+            <div class="switch">
+              <input type="checkbox" id="c_showEmaTrend"><label for="c_showEmaTrend" style="color:var(--muted)">EMA trend</label>
             </div>
           </div>
         </div>
@@ -722,8 +635,8 @@
         </div>
         <div class="rsi-embed mt-4" id="c_tradeWrap">
           <div class="flex items-center justify-between mb-2">
-            <div class="text-sm" style="color:var(--muted)">Buy/Sell (C)</div>
-            <div class="text-xs" style="color:var(--muted)">Bar = USD per trade (Buy +, Sell −)</div>
+            <div class="text-sm" style="color:var(--muted)">Buys (C)</div>
+            <div class="text-xs" style="color:var(--muted)">Bar = USD per trade</div>
           </div>
           <div style="height:170px"><canvas id="c_chartBS"></canvas></div>
         </div>
@@ -739,7 +652,7 @@
         </summary>
         <div class="mt-3">
           <table class="tbl-compact">
-            <thead id="c_logHead"><tr><th>#</th><th>Date</th><th>Type</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr></thead>
+            <thead id="c_logHead"><tr><th>#</th><th>Date</th><th>Price</th><th>RSI</th><th>EMAtrend</th><th>Mult</th><th>USD</th><th>BTC</th><th>Sum Invested</th><th>Savings</th><th>Port. Value</th></tr></thead>
             <tbody id="c_log"></tbody>
           </table>
         </div>
@@ -815,11 +728,9 @@ function destroyChartByCanvasId(id){
   if(old) old.destroy();
 }
 const WDCA_PRESETS={
-  Conservative: { base:100, min:70,  max:220, overdraft:0,   step:5,  ema:100, rsi:14, sensTrend:0.10, sensCost:0.12, wTrend:0.5, wCost:0.3, wRsi:0.2, alpha:0.45 },
-  Standard:     { base:100, min:50,  max:300, overdraft:0,   step:5,  ema:50,  rsi:14, sensTrend:0.08, sensCost:0.10, wTrend:0.5, wCost:0.3, wRsi:0.2, alpha:0.35,
-                  sellEn:true, ob1:72, ob2:78, ob3:84, sL1:4, sL2:7, sL3:10, profitGuard:4, minSell:25, maxSellW:500, coolW:1,
-                  phaseLB:20, phaseCutUp:0.25, phaseBoostDn:0.35, bankReserve:30, bankCap:10 },
-  Aggressive:   { base:100, min:40,  max:350, overdraft:200, step:5,  ema:50,  rsi:14, sensTrend:0.06, sensCost:0.08, wTrend:0.45, wCost:0.35, wRsi:0.2, alpha:0.45 },
+  Conservative:{ base:100, min:70,  max:220, step:5, rsiPeriod:14, rsiOS:30, rsiOB:70, emaTrend:200 },
+  Standard:    { base:100, min:50,  max:300, step:5, rsiPeriod:14, rsiOS:30, rsiOB:70, emaTrend:200 },
+  Aggressive:  { base:100, min:40,  max:350, step:5, rsiPeriod:14, rsiOS:25, rsiOB:75, emaTrend:100 },
 };
 function alignUnder(main, ...subs){
   if(!main || !main.chartArea) return;
@@ -832,38 +743,6 @@ function alignUnder(main, ...subs){
   }
 }
 
-function computePhaseSeries(close,emaPeriodFast,rsiPeriod,params){
-  const emaFast=EMA(close,emaPeriodFast);
-  const slopeRaw=new Array(close.length).fill(null);
-  for(let i=0;i<close.length;i++){
-    if(i>=params.phaseLB && emaFast[i]!=null && emaFast[i-params.phaseLB]!=null){
-      const prev=emaFast[i-params.phaseLB];
-      slopeRaw[i]=(emaFast[i]-prev)/Math.max(1e-9,prev);
-    }
-  }
-  const emaSlopeSmoothed=EMA(slopeRaw,5);
-  const rsi=RSI(close,rsiPeriod);
-  const phase=new Array(close.length).fill('SIDE');
-  const phaseScore=new Array(close.length).fill(0);
-  for(let i=0;i<close.length;i++){
-    const price=close[i];
-    const ema=emaFast[i];
-    const slope=emaSlopeSmoothed[i];
-    const r=rsi[i];
-    const up=(ema!=null && slope!=null && price>ema && slope>+params.phaseCutUp);
-    const down=(ema!=null && slope!=null && price<ema && slope<-params.phaseCutUp);
-    const flat=!up&&!down;
-    let ph='SIDE', ps=0;
-    if(up && r!=null && r<params.ob1){ ph='BULL_EARLY'; ps=0.25; }
-    else if(up && r!=null && r>=params.ob2){ ph='BULL_LATE'; ps=-0.25; }
-    else if(flat && r!=null && r>=params.ob2){ ph='DISTRIBUTION'; ps=-0.25; }
-    else if(down && r!=null && r>50){ ph='BEAR_EARLY'; ps=0.1; }
-    else if(down && r!=null && r<=50){ ph='BEAR_LATE'; ps=0.2; }
-    if(ph==='BEAR_EARLY' || ph==='BEAR_LATE'){ ps*=1+(params.phaseBoostDn||0); }
-    phase[i]=ph; phaseScore[i]=ps;
-  }
-  return {phase,phaseScore,emaFast,emaSlopeSmoothed,rsi};
-}
 function debounce(fn,ms){ let t; return function(){ clearTimeout(t); t=setTimeout(fn,ms); }; }
 function setStatus(prefix,text){ const el=document.getElementById(prefix+'_status'); if(el) el.textContent=text; }
 function parseNumber(str){
@@ -875,9 +754,9 @@ function parseNumber(str){
 }
 
 const stateC={
-  paramsDraft:{base:100,min:50,max:300,overdraft:0,step:5,sellEn:false,ob1:72,ob2:78,ob3:84,sL1:5,sL2:10,sL3:15,profitGuard:4,minSell:25,maxSellW:2000,coolW:1,phaseLB:20,phaseCutUp:0.25,phaseBoostDn:0.35,bankReserve:30,bankCap:10},
-  params:{base:100,min:50,max:300,overdraft:0,step:5,sellEn:false,ob1:72,ob2:78,ob3:84,sL1:5,sL2:10,sL3:15,profitGuard:4,minSell:25,maxSellW:2000,coolW:1,phaseLB:20,phaseCutUp:0.25,phaseBoostDn:0.35,bankReserve:30,bankCap:10},
-  errors:{}
+  paramsDraft:{repeat:'weekly',base:100,min:50,max:300,step:5,rsiPeriod:14,rsiOS:30,rsiOB:70,emaTrend:200},
+  params:{repeat:'weekly',base:100,min:50,max:300,step:5,rsiPeriod:14,rsiOS:30,rsiOB:70,emaTrend:200},
+  errors:{},
 };
 
 function removeFieldWarning(id){
@@ -926,31 +805,16 @@ function validateField(id){
     if(d.max==null) msgs.push('Max required');
     if(d.max<0) msgs.push('Max must be ≥ 0');
     if(d.min!=null && d.max<d.min) msgs.push('Max must be ≥ Min');
-  } else if(id==='overdraft'){
-    if(d.overdraft==null || d.overdraft<0) msgs.push('Overdraft must be ≥ 0');
   } else if(id==='step'){
     if(!(d.step>0)) msgs.push('Step must be > 0');
-  } else if(['ob1','ob2','ob3'].includes(id)){
-    if(d[id]==null) msgs.push('Required');
-    if(d.ob1!=null && d.ob2!=null && d.ob3!=null){
-      if(!(d.ob1<d.ob2 && d.ob2<d.ob3)) msgs.push('OB tiers must increase');
-    }
-  } else if(['sL1','sL2','sL3'].includes(id)){
-    if(d[id]==null) msgs.push('Required');
-    if(d[id]<0 || d[id]>50) msgs.push('0-50');
-  } else if(id==='profitGuard'){
-    if(d.profitGuard==null || d.profitGuard<0 || d.profitGuard>50) msgs.push('0-50');
-  } else if(id==='bankReserve'){
-    if(d.bankReserve==null || d.bankReserve<0 || d.bankReserve>90) msgs.push('0-90');
-  } else if(id==='minSell'){
-    if(d.minSell==null || d.minSell<10) msgs.push('≥10');
-    if(d.maxSellW!=null && d.minSell>d.maxSellW) msgs.push('≤ Max/week');
-  } else if(id==='maxSellW'){
-    if(d.maxSellW==null || d.maxSellW<d.minSell) msgs.push('≥ Min sell');
-  } else if(id==='phaseCutUp'){
-    if(d.phaseCutUp==null || d.phaseCutUp<0 || d.phaseCutUp>1) msgs.push('0-1');
-  } else if(id==='phaseBoostDn'){
-    if(d.phaseBoostDn==null || d.phaseBoostDn<0 || d.phaseBoostDn>1) msgs.push('0-1');
+  } else if(id==='rsiPeriod'){
+    if(d.rsiPeriod==null || d.rsiPeriod<2 || d.rsiPeriod>100) msgs.push('2-100');
+  } else if(id==='emaTrend'){
+    if(d.emaTrend==null || d.emaTrend<5 || d.emaTrend>400) msgs.push('5-400');
+  } else if(id==='rsiOS' || id==='rsiOB'){
+    if(d.rsiOS==null || d.rsiOS<5 || d.rsiOS>95) msgs.push('5-95');
+    if(d.rsiOB==null || d.rsiOB<5 || d.rsiOB>95) msgs.push('5-95');
+    if(d.rsiOS!=null && d.rsiOB!=null && d.rsiOS>=d.rsiOB) msgs.push('OS < OB');
   }
   stateC.errors[id]=msgs;
   const input=document.getElementById('c_'+id);
@@ -975,12 +839,12 @@ function commitField(id){
 
 function validateAllC(){
   let ok=true;
-  ['min','base','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','bankReserve','phaseCutUp','phaseBoostDn'].forEach(id=>{ if(!validateField(id)) ok=false; });
+  ['min','base','max','step','rsiPeriod','rsiOS','rsiOB','emaTrend'].forEach(id=>{ if(!validateField(id)) ok=false; });
   updateBacktestDisabled();
   return ok;
 }
 
-['base','min','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','coolW','phaseLB','phaseCutUp','phaseBoostDn','bankReserve','bankCap'].forEach(id=>{
+['base','min','max','step','rsiPeriod','rsiOS','rsiOB','emaTrend'].forEach(id=>{
   const el=document.getElementById('c_'+id);
   if(!el) return;
   stateC.paramsDraft[id]=parseNumber(el.value);
@@ -988,13 +852,6 @@ function validateAllC(){
   el.addEventListener('input',e=>{ stateC.paramsDraft[id]=parseNumber(e.target.value); validateField(id); updateBacktestDisabled(); });
   el.addEventListener('blur',()=>{ validateField(id); commitField(id); updateBacktestDisabled(); });
 });
-
-const sellEnEl=document.getElementById('c_sellEn');
-if(sellEnEl){
-  stateC.paramsDraft.sellEn=sellEnEl.checked;
-  stateC.params.sellEn=sellEnEl.checked;
-  sellEnEl.addEventListener('change',e=>{ stateC.paramsDraft.sellEn=e.target.checked; stateC.params.sellEn=e.target.checked; });
-}
 validateAllC();
 function compactUSD(x){ const abs=Math.abs(x), u=[{v:1e12,s:'T'},{v:1e9,s:'B'},{v:1e6,s:'M'},{v:1e3,s:'K'}];
   for(const k of u){ if(abs>=k.v) return '$'+(x/k.v).toFixed(abs>=1e9?2:1).replace(/\.0+$/,'')+k.s; }
@@ -1112,124 +969,84 @@ function calcLumpSum(invested,firstBuyDate,lastPrice){
   const entry=PRICE_MAP.get(firstBuyDate); if(!entry) return null; const qty=invested/entry; return {entryPrice:entry, btc:qty, value:qty*lastPrice};
 }
 
+
 function runWDCA(freq, params, startISO, endISO){
   const series=sliceRange(startISO,endISO);
   const schedule=buildSchedule(freq,startISO,endISO);
   const set=new Set(schedule);
   const close=series.map(r=>r.close);
-  const {phase,phaseScore,emaFast,emaSlopeSmoothed,rsi}=computePhaseSeries(close,params.ema,params.rsi,params);
-  let bank=0, invested=0, soldUSD=0, btc=0;
-  let lastSellIdx=-1;
-  let weeklySoldUSD=0;
-  let avgCost=0;
-  let firstBuyDate=null;
-  let bankMin=0, hitsMin=0, hitsMax=0, multSum=0;
-  const log=[], port=[], invS=[], netInvS=[];
+  const rsiSeries=RSI(close,params.rsiPeriod);
+  const emaTrendSeries=EMA(close,params.emaTrend);
+  let invested=0, btc=0, savings=0;
+  let hitsMin=0, hitsMax=0, multSum=0;
+  const log=[], port=[], invS=[];
   const EPS=params.step>0?params.step*0.5:1e-9;
-  let prevScore=0;
+  let prevW=null; const alpha=0.5;
+  let rsiHigh=false, rsiLow=false, trendBelow=false;
   let schedIdx=0;
   for(let i=0;i<series.length;i++){
     const row=series[i]; const price=row.close; const date=row.date;
+    const rsi=rsiSeries[i]; const emaT=emaTrendSeries[i];
     if(set.has(date)){
-      weeklySoldUSD=0;
-      if(params.sellEn){
-        const ph=phase[i];
-        if(['BULL_LATE','DISTRIBUTION','BEAR_EARLY'].includes(ph)){
-          const r=rsi[i];
-          let tier=0;
-          if(r!=null){
-            if(r>=params.ob3) tier=3;
-            else if(r>=params.ob2) tier=2;
-            else if(r>=params.ob1) tier=1;
-          }
-          const cooldownOk=(schedIdx-lastSellIdx)>=params.coolW;
-          const pgOk=avgCost>0?price>=avgCost*(1+params.profitGuard/100):true;
-          if(tier>0 && btc>0 && cooldownOk && weeklySoldUSD<params.maxSellW && pgOk){
-            const remaining=(params.maxSellW-weeklySoldUSD)/price;
-            const pct=[0,params.sL1,params.sL2,params.sL3][tier]/100;
-            let qty=Math.min(btc*pct,remaining);
-            const proceeds=qty*price;
-            if(proceeds>=params.minSell && qty>0){
-              btc-=qty; if(btc<1e-9) btc=0;
-              bank+=proceeds;
-              soldUSD+=proceeds;
-              weeklySoldUSD+=proceeds;
-              lastSellIdx=schedIdx;
-              log.push({idx:schedIdx,date,price:safe(price),invested:safe(-proceeds),totalInvested:safe(invested),value:safe(btc*price),score:0,s1:0,s2:0,s3:0,f:0,bank:safe(bank),type:'Sell'});
-            }
-          }
-        }
+      if(rsi!=null){
+        if(rsiHigh){ if(rsi<=params.rsiOB-2) rsiHigh=false; }
+        else if(rsi>=params.rsiOB) rsiHigh=true;
+        if(rsiLow){ if(rsi>=params.rsiOS+2) rsiLow=false; }
+        else if(rsi<=params.rsiOS) rsiLow=true;
       }
-
-      const ema=emaFast[i];
-      const s1=ema? -Math.tanh(((price-ema)/ema)/params.sensTrend):0;
-      const s2=avgCost? -Math.tanh(((price-avgCost)/avgCost)/params.sensCost):0;
-      const r=rsi[i];
-      let s3=0; if(r!=null){ if(r<=30) s3=1; else if(r>=70) s3=-1; else s3=(50-r)/20; }
-      const scoreRaw=params.wTrend*s1+params.wCost*s2+params.wRsi*s3+(phaseScore[i]||0);
-      const score=clamp((1-params.alpha)*prevScore+params.alpha*scoreRaw,-1,1); prevScore=score;
-      const k=0.30;
-      const m_raw=1+k*score;
-      const m_clamped=clamp(m_raw,params.min/params.base,params.max/params.base);
-      let target=roundToStep(params.base*m_clamped,params.step);
-      const reserveUSD=(params.bankReserve/100)*(params.base*4);
-      const overdraft=((phase[i]==='BEAR_EARLY'||phase[i]==='BEAR_LATE') && r<40)?params.overdraft:0;
-      const cashAvailable=params.base+bank+overdraft;
-      if(bank-(target-params.base)<reserveUSD && phase[i]!=='BEAR_LATE'){
-        const maxInvest=bank-reserveUSD+params.base;
-        target=roundToStep(clamp(maxInvest,params.min,params.max),params.step);
+      let weightRSI=1.0;
+      if(rsi!=null){
+        if(rsiLow) weightRSI=2.0; else if(rsiHigh) weightRSI=0.5; else weightRSI=1.0;
       }
-      let invest=Math.min(target,cashAvailable);
-      if(invest<0) invest=0;
-      const qtyBuy=invest/price;
-      if(qtyBuy>0){
-        btc+=qtyBuy;
-        bank+=params.base-invest;
-        invested+=invest;
-        avgCost=btc>1e-9?invested/btc:0;
-        multSum+=params.base>0?invest/params.base:0;
-        if(Math.abs(invest-params.min)<=EPS) hitsMin++;
-        if(Math.abs(invest-params.max)<=EPS) hitsMax++;
-        if(!firstBuyDate) firstBuyDate=date;
-        log.push({idx:schedIdx,date,price:safe(price),invested:safe(invest),totalInvested:safe(invested),value:safe(btc*price),score:safe(score),s1:safe(s1),s2:safe(s2),s3:safe(s3),f:safe(m_clamped),bank:safe(bank),type:'Buy'});
-      }else{
-        bank+=params.base;
-        log.push({idx:schedIdx,date,price:safe(price),invested:0,totalInvested:safe(invested),value:safe(btc*price),score:safe(score),s1:safe(s1),s2:safe(s2),s3:safe(s3),f:safe(m_clamped),bank:safe(bank),type:'Buy'});
+      if(emaT!=null){
+        if(trendBelow){ if(price>=emaT*(1+0.00)) trendBelow=false; }
+        else if(price<=emaT*(1-0.00)) trendBelow=true;
       }
-      if(bank<bankMin) bankMin=bank;
+      let weightTrend=emaT!=null?(trendBelow?1.3:0.8):1.0;
+      let totalW_raw=weightRSI*weightTrend;
+      let totalW=(prevW==null)?totalW_raw:alpha*prevW+(1-alpha)*totalW_raw; prevW=totalW;
+      totalW=clamp(totalW,0.5,3.0);
+      const target=params.base*totalW;
+      let actual=clamp(roundToStep(target,params.step),params.min,params.max);
+      if(actual>params.base){
+        const extra=actual-params.base; const use=Math.min(extra,savings); actual=params.base+use; savings-=use;
+      } else {
+        savings+=params.base-actual;
+      }
+      const qty=actual/price;
+      invested+=actual; btc+=qty;
+      const avgCost=btc>1e-9?invested/btc:0;
+      multSum+=params.base>0?actual/params.base:0;
+      if(Math.abs(actual-params.min)<=EPS) hitsMin++;
+      if(Math.abs(actual-params.max)<=EPS) hitsMax++;
+      log.push({idx:schedIdx,date,price:safe(price),rsi:safe(rsi),emaTrend:safe(emaT),multiplier:safe(totalW),invested:safe(actual),btcQty:safe(qty),totalInvested:safe(invested),savings:safe(savings),value:safe(btc*price)});
       schedIdx++;
     }
     invS.push({date, invested:safe(invested)});
-    netInvS.push({date, invested:safe(invested-soldUSD)});
     port.push({date, price:safe(price), value:safe(btc*price), invested:safe(invested)});
   }
   const lastEntry=series[series.length-1];
   const last=lastEntry?lastEntry.close:null;
   const lastDate=lastEntry?lastEntry.date:null;
   const finalVal=btc*(last||0);
-  return { scheduleCount:schedule.length, invested, soldUSD, netInvested:invested-soldUSD, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastDate, value:Number.isFinite(finalVal)?finalVal:null,
-           firstBuyDate, logRows:log, portfolioSeries:port, investedSeries:invS, netInvestedSeries:netInvS,
-           bankFinal:bank, bankMin, avgMultiplier:schedIdx?multSum/schedIdx:0, hitsMin, hitsMax };
+  return { scheduleCount:schedule.length, invested, btc, avgCost:btc?invested/btc:0, lastPrice:last, lastPriceDate:lastDate, value:Number.isFinite(finalVal)?finalVal:null,
+           firstBuyDate:log.length?log[0].date:null, logRows:log, portfolioSeries:port, investedSeries:invS,
+           rsiSeries, emaTrendSeries, savingsFinal:savings, avgMultiplier:schedIdx?multSum/schedIdx:0, hitsMin, hitsMax };
 }
 
 function createWorkspaceC(prefix){
   const el=id=>document.getElementById(prefix+'_'+id);
   const ws={
     chartMain:null, chartRSI:null, chartBS:null, fpStart:null, fpEnd:null, lastResult:null,
-    get frequency(){ return el('freq').value; },
+    get frequency(){ return stateC.params.repeat; },
     get base(){ return stateC.params.base; },
     get min(){ return stateC.params.min; },
     get max(){ return stateC.params.max; },
-    get overdraft(){ return stateC.params.overdraft; },
     get step(){ return stateC.params.step; },
-    get ema(){ return clamp(num(el('ema').value)||50,2,5000); },
-    get rsi(){ return clamp(num(el('rsi').value)||14,2,5000); },
-    get sensTrend(){ return Math.max(0.001, num(el('sensTrend').value)||0.1); },
-    get sensCost(){ return Math.max(0.001, num(el('sensCost').value)||0.1); },
-    get wTrend(){ return Math.max(0, num(el('wTrend').value)||0); },
-    get wCost(){ return Math.max(0, num(el('wCost').value)||0); },
-    get wRsi(){ return Math.max(0, num(el('wRsi').value)||0); },
-    get alpha(){ return clamp(num(el('alpha').value)||0.35,0,1); },
+    get rsiPeriod(){ return stateC.params.rsiPeriod; },
+    get rsiOS(){ return stateC.params.rsiOS; },
+    get rsiOB(){ return stateC.params.rsiOB; },
+    get emaTrend(){ return stateC.params.emaTrend; },
     get preset(){ return el('preset').value; },
     get sISO(){ return el('start').value; },
     get eISO(){ return el('end').value; },
@@ -1237,7 +1054,7 @@ function createWorkspaceC(prefix){
     get rsiOn(){ return el('rsiOn').checked; }, get rsiAlertOn(){ return el('rsiAlertOn').checked; },
     get maP(){ return clamp(num(el('maPeriod').value)||50,2,5000); },
     get emaP(){ return clamp(num(el('emaPeriod').value)||200,2,5000); },
-    get rsiP(){ return clamp(num(el('rsiPeriod').value)||14,2,5000); },
+    get rsiP(){ return clamp(num(el('rsiPeriodInd').value)||14,2,5000); },
     get rsiNear(){ return clamp(num(el('rsiNear').value)||2,0,10); },
 
     ensurePickers(){
@@ -1265,246 +1082,159 @@ function createWorkspaceC(prefix){
     computeIndicators(series){
       const priceArray=series.map(s=>s.price);
       return { ma:this.maOn?SMA(priceArray,this.maP):null,
-               ema:this.emaOn?EMA(priceArray,this.emaP):null,
-               rsi:this.rsiOn?RSI(priceArray,this.rsiP):null };
+               ema:this.emaOn?EMA(priceArray,this.emaP):null };
     },
 
-    renderCharts(series,investedSeries,indicators){
-      destroyChartByCanvasId(prefix+'_chartMain');
-      destroyChartByCanvasId(prefix+'_chartRSI');
-      destroyChartByCanvasId(prefix+'_chartBS');
-      this.chartMain=null;
-      this.chartRSI=null;
-      this.chartBS=null;
+    
+renderCharts(series,investedSeries,indicators){
+  destroyChartByCanvasId(prefix+'_chartMain');
+  destroyChartByCanvasId(prefix+'_chartRSI');
+  destroyChartByCanvasId(prefix+'_chartBS');
+  this.chartMain=null; this.chartRSI=null; this.chartBS=null;
 
-      const labels=series.map(p=>p.date);
-      const buyBars=Array(labels.length).fill(null);
-      const sellBars=Array(labels.length).fill(null);
-      if(this.lastResult && Array.isArray(this.lastResult.logRows)){
-        const idxByDate=new Map(labels.map((d,i)=>[d,i]));
-        for(const r of this.lastResult.logRows){
-          const idx=idxByDate.get(r.date); if(idx==null) continue;
-          const v=Number(r.invested)||0;
-          if(v>0)      buyBars[idx]=(buyBars[idx] ?? 0)+v;
-          else if(v<0) sellBars[idx]=(sellBars[idx]??0)+v;
-        }
+  const labels=series.map(p=>p.date);
+  const buyBars=Array(labels.length).fill(null);
+  if(this.lastResult && Array.isArray(this.lastResult.logRows)){
+    const idxByDate=new Map(labels.map((d,i)=>[d,i]));
+    for(const r of this.lastResult.logRows){
+      const idx=idxByDate.get(r.date); if(idx==null) continue;
+      const v=Number(r.invested)||0; if(v>0) buyBars[idx]=(buyBars[idx]??0)+v;
+    }
+  }
+  const tradeWrap=document.getElementById('c_tradeWrap');
+  if(buyBars.some(v=>v!=null)) tradeWrap.style.display=''; else tradeWrap.style.display='none';
+  const maxBuy=Math.max(0,...buyBars.map(v=>v??0));
+  const pad=0.05; const suggestedMax=Number.isFinite(maxBuy)?maxBuy*(1+pad):undefined;
+
+  let price=series.map(p=>safe(p.price));
+  let value=series.map(p=>safe(p.value));
+  let invested=investedSeries.map(p=>safe(p.invested));
+  const tc=themeColors();
+  const isDark=document.documentElement.classList.contains('dark') || document.documentElement.dataset.theme!=='light';
+  const datasets=[
+    {label:'BTC price (USD)',data:price,yAxisID:'y',borderColor:'#22c55e',pointRadius:0,tension:.25,borderWidth:2,cubicInterpolationMode:'monotone',spanGaps:true},
+    {label:'Portfolio value (USD)',data:value,yAxisID:'y1',borderColor:'#60a5fa',pointRadius:0,tension:.25,borderWidth:1.6,cubicInterpolationMode:'monotone',spanGaps:true},
+    {label:'Total contribution (USD)',data:invested,yAxisID:'y1',borderColor:'rgba(59,130,246,0)',backgroundColor:'rgba(59,130,246,.18)',fill:true,pointRadius:0,tension:.2,borderWidth:0.01}
+  ];
+  if(indicators.ma) datasets.push({label:`SMA (${this.maP})`,data:indicators.ma.map(safe),yAxisID:'y',borderColor:'#fbbf24',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
+  if(indicators.ema) datasets.push({label:`EMA (${this.emaP})`,data:indicators.ema.map(safe),yAxisID:'y',borderColor:'#e879f9',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
+  const showEmaTrend=document.getElementById('c_showEmaTrend').checked;
+  if(showEmaTrend && this.lastResult && this.lastResult.emaTrendSeries){
+    datasets.push({label:`EMAtrend (${this.emaTrend})`,data:this.lastResult.emaTrendSeries.map(safe),yAxisID:'y',borderColor:'#f97316',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
+  }
+  const rsiData=this.lastResult?this.lastResult.rsiSeries.map(safe):null;
+  const rsiSpans=[];
+  if(this.rsiAlertOn && rsiData && rsiData.some(v=>v!=null)){
+    const near=this.rsiNear||0;
+    const alpha=document.documentElement.dataset.theme==='light'?0.1:0.12;
+    const rsi=rsiData;
+    let start=null,type=null;
+    for(let i=0;i<rsi.length;i++){
+      const v=rsi[i];
+      const curr=v!=null && (v>=70-near?'over':v<=30+near?'under':null);
+      if(curr){ if(start===null){ start=i; type=curr; } }
+      else if(start!==null){ rsiSpans.push({x0:start,x1=i-1,color:type==='over'?`rgba(255,0,0,${alpha})`:`rgba(0,180,0,${alpha})`}); start=null; type=null; }
+    }
+    if(start!==null) rsiSpans.push({x0:start,x1:rsi.length-1,color:type==='over'?`rgba(255,0,0,${alpha})`:`rgba(0,180,0,${alpha})`});
+  }
+  const ctxMain=document.getElementById(prefix+'_chartMain').getContext('2d');
+  this.chartMain=new Chart(ctxMain,{
+    type:'line',
+    data:{labels,datasets},
+    options:{
+      responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      animation:{onComplete:debouncedMH},
+      scales:{
+        y:{position:'left',grid:{color:tc.gridStrong},ticks:{color:tc.tick,callback:v=>compactUSD(v)}},
+        y1:{position:'right',grid:{color:tc.gridStrong,drawOnChartArea:false},ticks:{color:tc.tick,callback:v=>compactUSD(v)}},
+        x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}
+      },
+      plugins:{
+        legend:{labels:{color:tc.tick,font:{size:11}}},
+        tooltip:{callbacks:{label:(ctx)=>{const raw=Number(ctx.raw)||0; const abs=compactUSD(Math.abs(raw)); return `${ctx.dataset.label}: ${raw>=0?'+':'−'}${abs}`;} }},
+        rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans},
+        crosshair:true
       }
-      const tradeWrap=document.getElementById('c_tradeWrap');
-      if(buyBars.some(v=>v!=null) || sellBars.some(v=>v!=null)) tradeWrap.style.display=''; else tradeWrap.style.display='none';
-      const maxBuy = Math.max(0, ...buyBars.map(v=>v??0));
-      const minSell = Math.min(0, ...sellBars.map(v=>v??0));
-      const pad=0.05;
-      const suggestedMax = Number.isFinite(maxBuy) ? maxBuy*(1+pad) : undefined;
-      const suggestedMin = Number.isFinite(minSell)? minSell*(1+pad): undefined;
+    }
+  });
+  const ctxBS=document.getElementById(prefix+'_chartBS').getContext('2d');
+  this.chartBS=new Chart(ctxBS,{
+    type:'bar',
+    data:{labels,datasets:[{label:'Buy',data:buyBars,backgroundColor:'#22c55e'}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      scales:{y:{ticks:{display:false},grid:{color:tc.gridStrong},suggestedMin:0,suggestedMax:suggestedMax,border:{display:false}},x:{grid:{display:false,drawTicks:false},ticks:{display:false}}},
+      plugins:{legend:{labels:{color:tc.tick,font:{size:11}}},tooltip:{callbacks:{label:(ctx)=>{const raw=Number(ctx.raw)||0; return `Buy: ${compactUSD(raw)}`;}}},crosshair:true}
+    }
+  });
+  const rsiLabels=labels; const ctxRSI=document.getElementById(prefix+'_chartRSI').getContext('2d');
+  this.chartRSI=new Chart(ctxRSI,{
+    type:'line',
+    data:{labels:rsiLabels,datasets:[{label:'RSI',data:rsiData,yAxisID:'y',borderColor:'#e879f9',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true}]},
+    options:{
+      responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      scales:{y:{position:'left',grid:{color:tc.gridStrong},ticks:{color:tc.tick,callback:v=>fmt(v,0)}},x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}},
+      plugins:{legend:{labels:{color:tc.tick,font:{size:11}}},crosshair:true}
+    }
+  });
+  var ws=this; requestAnimationFrame(function(){ alignUnder(ws.chartMain, ws.chartRSI, ws.chartBS); });
+},
 
-      let price=series.map(p=>p.price); price=price.map(safe);
-      let value=series.map(p=>p.value); value=value.map(safe);
-      let invested=investedSeries.map(p=>p.invested); invested=invested.map(safe);
-      const tc=themeColors();
-      const isDark=document.documentElement.classList.contains('dark') || document.documentElement.dataset.theme!=='light';
-      const datasets=[
-        {label:'BTC price (USD)',data:price,yAxisID:'y',borderColor:'#22c55e',pointRadius:0,tension:.25,borderWidth:2,cubicInterpolationMode:'monotone',spanGaps:true},
-        {label:'Portfolio value (USD)',data:value,yAxisID:'y1',borderColor:'#60a5fa',pointRadius:0,tension:.25,borderWidth:1.6,cubicInterpolationMode:'monotone',spanGaps:true},
-        {label:'Total contribution (USD)',data:invested,yAxisID:'y1',borderColor:'rgba(59,130,246,0)',backgroundColor:'rgba(59,130,246,.18)',fill:true,pointRadius:0,tension:.2,borderWidth:0.01}
-      ];
-      if(indicators.ma) datasets.push({label:`SMA (${this.maP})`,data:indicators.ma.map(safe),yAxisID:'y',borderColor:'#fbbf24',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
-      if(indicators.ema) datasets.push({label:`EMA (${this.emaP})`,data:indicators.ema.map(safe),yAxisID:'y',borderColor:'#e879f9',pointRadius:0,tension:.2,borderWidth:1.6,spanGaps:true});
 
-      const rsiData=indicators.rsi?indicators.rsi.map(safe):null;
-      const rsiSpans=[];
-      if(this.rsiAlertOn && rsiData && rsiData.some(v=>v!=null)){
-        const near=this.rsiNear||0;
-        const alpha=document.documentElement.dataset.theme==='light'?0.1:0.12;
-        const rsi=rsiData;
-        let start=null,type=null;
-        for(let i=0;i<rsi.length;i++){
-          const v=rsi[i];
-          const curr=v!=null && (v>=70-near?'over':v<=30+near?'under':null);
-          if(curr){ if(start===null){ start=i; type=curr; } }
-          else if(start!==null){ rsiSpans.push({x0:start,x1:i-1,color:type==='over'?`rgba(255,0,0,${alpha})`:`rgba(0,180,0,${alpha})`}); start=null; type=null; }
-        }
-        if(start!==null) rsiSpans.push({x0:start,x1:rsi.length-1,color:type==='over'?`rgba(255,0,0,${alpha})`:`rgba(0,180,0,${alpha})`});
-      }
+updateKPI(r,ls){
+  const invested=r.invested||0;
+  const portfolio=r.value||0;
+  const savings=r.savingsFinal||0;
+  const pnlPct=invested>0?(portfolio/invested-1)*100:null;
+  const buyCount=r.scheduleCount;
+  const kdur=el('k_duration');
+  if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate); else kdur.textContent='—';
+  el('k_trades').textContent=Number.isFinite(buyCount)?fmt(buyCount,0):'—';
+  el('k_invested').textContent=Number.isFinite(invested)?compactUSD(invested):'—';
+  el('k_btc').textContent=Number.isFinite(r.btc)?fmt(r.btc,3):'—';
+  el('k_avg').textContent=r.btc>0&&Number.isFinite(r.avgCost)?compactUSD(r.avgCost):'—';
+  el('k_value').textContent=Number.isFinite(portfolio)?compactUSD(portfolio):'—';
+  const kpnl=el('k_pnl');
+  if(pnlPct!=null && Number.isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
+  else{ kpnl.textContent='—'; kpnl.title='Return undefined when user contribution ≤ 0'; }
+  if(ls){ const lsPct=invested>0 && Number.isFinite(ls.value)?(ls.value/invested-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&Number.isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
+  else{ el('k_vsls').textContent='—'; }
+  el('k_savings').textContent=Number.isFinite(savings)?compactUSD(savings):'—';
+  el('k_avgMult').textContent=Number.isFinite(r.avgMultiplier)?fmt(r.avgMultiplier,2):'—';
+  el('k_hits').textContent=(Number.isFinite(r.hitsMin)&&Number.isFinite(r.hitsMax))?`${r.hitsMin} / ${r.hitsMax}`:'—';
 
-      const ctxMain=document.getElementById(prefix+'_chartMain').getContext('2d');
-      this.chartMain=new Chart(ctxMain,{
-        type:'line',
-        data:{labels,datasets},
-        options:{
-          responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-          animation:{onComplete:debouncedMH},
-          scales:{
-            y:{position:'left',grid:{color:tc.gridStrong},ticks:{color:tc.tick,callback:v=>compactUSD(v)}},
-            y1:{position:'right',grid:{color:tc.gridStrong,drawOnChartArea:false},ticks:{color:tc.tick,callback:v=>compactUSD(v)}},
-            x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}
-          },
-          plugins:{
-            legend:{labels:{color:tc.tick,font:{size:11}}},
-            tooltip:{
-              enabled:true,
-              position:'bottomRight',
-              caretSize:0,
-              displayColors:false,
-              padding:12,
-              backgroundColor:isDark?'rgba(0,0,0,.84)':'rgba(255,255,255,.92)',
-              borderColor:isDark?'rgba(255,255,255,.15)':'rgba(0,0,0,.12)',
-              borderWidth:1,
-              titleColor:isDark?'rgba(255,255,255,.92)':'rgba(33,37,41,.92)',
-              bodyColor:isDark?'rgba(255,255,255,.92)':'rgba(33,37,41,.92)',
-              cornerRadius:8,
-              filter:item=>item.datasetIndex<3,
-              callbacks:{
-                title:items=>items[0].label,
-                label:ctx=>{
-                  if(ctx.datasetIndex===0) return `BTC price (USD): ${compactUSD(ctx.parsed.y)}`;
-                  if(ctx.datasetIndex===2) return `Total contribution (USD): ${compactUSD(ctx.parsed.y)}`;
-                  if(ctx.datasetIndex===1) return `Portfolio value (USD): ${compactUSD(ctx.parsed.y)}`;
-                  return '';
-                },
-                afterBody:items=>{
-                  try{
-                    const c=items[0].chart,i=items[0].dataIndex;
-                    const val=c.data.datasets[1].data[i];
-                    const inv=c.data.datasets[2].data[i];
-                    if(inv>0){ const pct=(val/inv-1)*100; return `\nPerformance on this date: ${(pct>=0?'+':'')}${fmt(pct,2)}%`; }
-                    return `\nPerformance on this date: —`;
-                  }catch(e){}
-                  return '';
-                }
-              }
-            },
-            crosshair:true,
-            rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}
-          }
-        }
-      });
+  const ab=[['k_trades_ab',res=>{if(!res) return null; const c=res.scheduleCount!==undefined?res.scheduleCount:(res.logRows?res.logRows.length:0); return fmt(c,0);}],
+            ['k_invested_ab',res=>res?compactUSD(res.invested):null],
+            ['k_btc_ab',res=>res?fmt(res.btc,3):null],
+            ['k_avg_ab',res=>res?(res.btc>0?compactUSD(res.avgCost):'—'):null],
+            ['k_value_ab',res=>res?compactUSD(res.value):null],
+            ['k_pnl_ab',res=>{ if(res&&res.invested>0){ const pct=(res.value/res.invested-1)*100; return compactPercent(pct);} return null; }]];
+  ab.forEach(([id,fn])=>{
+    const a=fn(WSA.lastResult), b=fn(WSB.lastResult); const elab=el(id);
+    if(elab){ const parts=[]; if(a!=null) parts.push('A: '+a); if(b!=null) parts.push('B: '+b); elab.textContent=parts.join(' • '); elab.style.display=parts.length?'block':'none'; }
+  });
 
-      const rsiWrap=document.getElementById(prefix+'_rsiWrap');
-      if(rsiData && rsiData.length && rsiData.some(v=>v!=null)){
-        rsiWrap.style.display='';
-        const ctxRsi=document.getElementById(prefix+'_chartRSI').getContext('2d');
-        document.getElementById(prefix+'_rsiLegend').textContent=this.rsiP;
-        this.chartRSI=new Chart(ctxRsi,{
-          type:'line',
-          data:{
-            labels,
-            datasets:[
-              {label:`RSI (${this.rsiP})`,data:rsiData,borderColor:'#f97316',pointRadius:0,borderWidth:1.6,tension:0.2,spanGaps:true},
-              {label:'OB 70',data:new Array(labels.length).fill(70),borderColor:'rgba(239,68,68,.35)',borderDash:[6,6],pointRadius:0,borderWidth:1},
-              {label:'OS 30',data:new Array(labels.length).fill(30),borderColor:'rgba(6,182,212,.35)',borderDash:[6,6],pointRadius:0,borderWidth:1}
-            ]
-          },
-          options:{
-            responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-            animation:{onComplete:debouncedMH},
-            scales:{
-              y:{min:0,max:100,ticks:{display:false},grid:{color:tc.gridStrong},border:{display:false}},
-              x:{grid:{color:tc.gridWeak,drawTicks:false},ticks:{color:tc.tick,maxTicksLimit:10,display:false}}
-            },
-            plugins:{tooltip:{enabled:false},legend:{labels:{color:tc.tick,font:{size:11}}},rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans}}
-          }
-        });
-      } else {
-        if(rsiWrap) rsiWrap.style.display='none';
-        this.chartRSI=null;
-      }
+  const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
+  head.innerHTML='<tr><th>#</th><th>Date</th><th>Price</th><th>RSI</th><th>EMAtrend</th><th>Mult</th><th>USD</th><th>BTC</th><th>Sum Invested</th><th>Savings</th><th>Port. Value</th></tr>';
+  const hasTx=r.logRows && r.logRows.length;
+  if(!hasTx){
+    const tr=document.createElement('tr');
+    tr.innerHTML='<td colspan="11" style="text-align:center;color:var(--muted)">No transactions</td>';
+    tbody.appendChild(tr);
+  } else {
+    r.logRows.forEach((row,i)=>{
+      const tr=document.createElement('tr');
+      tr.innerHTML=`<td>${i+1}</td><td>${row.date||'—'}</td><td>${row.price!=null?compactUSD(row.price):'—'}</td>`+
+                   `<td>${row.rsi!=null?fmt(row.rsi,0):'—'}</td><td>${row.emaTrend!=null?compactUSD(row.emaTrend):'—'}</td>`+
+                   `<td>${row.multiplier!=null?fmt(row.multiplier,2):'—'}</td><td>${row.invested!=null?compactUSD(row.invested):'—'}</td>`+
+                   `<td>${row.btcQty!=null?fmt(row.btcQty,8):'—'}</td><td>${row.totalInvested!=null?compactUSD(row.totalInvested):'—'}</td>`+
+                   `<td>${row.savings!=null?compactUSD(row.savings):'—'}</td><td>${row.value!=null?compactUSD(row.value):'—'}</td>`;
+      tbody.appendChild(tr);
+    });
+  }
+},
 
-      if(tradeWrap.style.display!=='none'){
-        const ctxBS=document.getElementById(prefix+'_chartBS').getContext('2d');
-        this.chartBS=new Chart(ctxBS,{
-          type:'bar',
-          data:{labels,datasets:[
-            {label:'Buys (USD)', data:buyBars, backgroundColor:'rgba(34,197,94,.85)', borderWidth:0, barPercentage:0.95, categoryPercentage:0.9},
-            {label:'Sells (USD)',data:sellBars,backgroundColor:'rgba(239,68,68,.85)',borderWidth:0,barPercentage:0.95,categoryPercentage:0.9}
-          ]},
-          options:{
-            responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
-            animation:{onComplete:debouncedMH},
-            scales:{
-              y:{ticks:{display:false},grid:{color:tc.gridStrong},suggestedMin:suggestedMin,suggestedMax:suggestedMax,border:{display:false}},
-              x:{grid:{display:false,drawTicks:false},ticks:{display:false}}
-            },
-            plugins:{
-              legend:{labels:{color:tc.tick,font:{size:11}}},
-              tooltip:{callbacks:{label:(ctx)=>{const raw=Number(ctx.raw)||0; const abs=compactUSD(Math.abs(raw)); return `${ctx.dataset.label}: ${raw>=0?'+':'−'}${abs}`;} }},
-              rsiAlert:{enabled:this.rsiAlertOn,spans:rsiSpans},
-              crosshair:true
-            }
-          }
-        });
-      }
-      var ws=this;
-      requestAnimationFrame(function(){ alignUnder(ws.chartMain, ws.chartRSI, ws.chartBS); });
-    },
-
-    updateKPI(r,ls){
-      const invested=r.invested||0;
-      const proceeds=r.soldUSD||0;
-      const bank=r.bankFinal||0;
-      const portfolio=r.value||0;
-      const finalValue=portfolio+bank;
-      const userContrib=invested-proceeds+bank;
-      const pnlPct=userContrib>0?(finalValue/userContrib-1)*100:null;
-      const buyCount=r.scheduleCount;
-      const kdur=el('k_duration');
-      if(r.firstBuyDate) kdur.textContent=humanDuration(r.firstBuyDate,r.lastPriceDate); else kdur.textContent='—';
-      el('k_trades').textContent=Number.isFinite(buyCount)?fmt(buyCount,0):'—';
-      const kinv=el('k_invested'); kinv.textContent=Number.isFinite(invested)?compactUSD(invested):'—'; kinv.title='Deployed into BTC (excludes bank)';
-      el('k_btc').textContent=Number.isFinite(r.btc)?fmt(r.btc,3):'—';
-      el('k_avg').textContent=r.btc>0&&Number.isFinite(r.avgCost)?compactUSD(r.avgCost):'—';
-      const kval=el('k_value'); kval.textContent=Number.isFinite(finalValue)?compactUSD(finalValue):'—'; kval.title='Portfolio + bank (cash)';
-      const kpnl=el('k_pnl');
-      if(pnlPct!=null && Number.isFinite(pnlPct)){ kpnl.textContent=compactPercent(pnlPct); kpnl.removeAttribute('title'); }
-      else{ kpnl.textContent='—'; kpnl.title='Return undefined when user contribution ≤ 0'; }
-      if(ls){ const lsPct=userContrib>0 && Number.isFinite(ls.value)?(ls.value/userContrib-1)*100:null; el('k_vsls').textContent=lsPct!=null&&pnlPct!=null&&Number.isFinite(pnlPct-lsPct)?compactPercent(pnlPct-lsPct):'—'; }
-      else{ el('k_vsls').textContent='—'; }
-      el('k_bankFinal').textContent=Number.isFinite(r.bankFinal)?compactUSD(r.bankFinal):'—';
-      el('k_bankMin').textContent=Number.isFinite(r.bankMin)?compactUSD(r.bankMin):'—';
-      el('k_avgMult').textContent=Number.isFinite(r.avgMultiplier)?fmt(r.avgMultiplier,2):'—';
-      el('k_hits').textContent=(Number.isFinite(r.hitsMin)&&Number.isFinite(r.hitsMax))?`${r.hitsMin} / ${r.hitsMax}`:'—';
-      el('k_sells').textContent=(r.soldUSD>0)?compactUSD(r.soldUSD):'—';
-      el('k_net').textContent=Number.isFinite(r.netInvested)?compactUSD(r.netInvested):'—';
-
-      const ab=[['k_trades_ab',res=>{if(!res) return null; const c=res.scheduleCount!==undefined?res.scheduleCount:(res.logRows?res.logRows.filter(x=>x.invested>0).length:0); return fmt(c,0);}],
-                ['k_invested_ab',res=>res?compactUSD(res.invested):null],
-                ['k_btc_ab',res=>res?fmt(res.btc,3):null],
-                ['k_avg_ab',res=>res?(res.btc>0?compactUSD(res.avgCost):'—'):null],
-                ['k_value_ab',res=>res?compactUSD(res.value+(res.bankFinal||0)):null],
-                ['k_pnl_ab',res=>{ if(res&&res.invested>0){ const pct=((res.value+(res.bankFinal||0))/res.invested-1)*100; return compactPercent(pct);} return null; }]];
-      ab.forEach(([id,fn])=>{
-        const a=fn(WSA.lastResult), b=fn(WSB.lastResult); const elab=el(id);
-        if(elab){ const parts=[]; if(a!=null) parts.push('A: '+a); if(b!=null) parts.push('B: '+b); elab.textContent=parts.join(' • '); elab.style.display=parts.length?'block':'none'; }
-      });
-
-      const head=el('logHead'); const tbody=el('log'); tbody.innerHTML='';
-      head.innerHTML='<tr><th>#</th><th>Date</th><th>Type</th><th>Price</th><th>Invest (USD)</th><th>Sum Invested</th><th>Port. Value</th><th>Δ$</th><th>Δ%</th><th>Score</th><th>s1</th><th>s2</th><th>s3</th><th>f</th><th>Bank</th></tr>';
-      const hasTx=r.logRows && r.logRows.length;
-      if(!hasTx){
-        const tr=document.createElement('tr');
-        tr.innerHTML='<td colspan="15" style="text-align:center;color:var(--muted)">No transactions</td>';
-        tbody.appendChild(tr);
-      } else {
-        r.logRows.forEach((row,i)=>{
-          const investedPer=row.invested;
-          const investedCum=row.totalInvested;
-          const val=row.value;
-          const pnlAbs=(val!=null && investedCum!=null)?val-investedCum:null;
-          const pnlPctRow=(val!=null && investedCum>0)?(val/investedCum-1)*100:null;
-          const tr=document.createElement('tr');
-          const type=investedPer<0?'Sell':'Buy';
-          if(type==='Sell') tr.classList.add('sell');
-          tr.innerHTML=`<td>${i+1}</td><td>${row.date||'—'}</td><td>${type}</td><td>${row.price!=null?compactUSD(row.price):'—'}</td>`+
-                       `<td>${investedPer!=null?compactUSD(investedPer):'—'}</td><td>${investedCum!=null?compactUSD(investedCum):'—'}</td><td>${val!=null?compactUSD(val):'—'}</td>`+
-                       `<td class="${pnlAbs!=null?(pnlAbs>=0?'gain':'loss'):''}">${pnlAbs!=null?(pnlAbs>=0?'+':'')+compactUSD(pnlAbs):'—'}</td>`+
-                       `<td class="${pnlPctRow!=null?(pnlPctRow>=0?'gain':'loss'):''}">${pnlPctRow!=null?(pnlPctRow>=0?'+':'')+fmt(pnlPctRow,2)+'%':'—'}</td>`+
-                       `<td>${row.score!=null?fmt(row.score,2):'—'}</td><td>${row.s1!=null?fmt(row.s1,2):'—'}</td><td>${row.s2!=null?fmt(row.s2,2):'—'}</td><td>${row.s3!=null?fmt(row.s3,2):'—'}</td><td>${row.f!=null?fmt(row.f,2):'—'}</td><td>${row.bank!=null?compactUSD(row.bank):'—'}</td>`;
-          tbody.appendChild(tr);
-        });
-      }
-
-    },
-
-    run(){
+run(){
       if(!RAW.length){ setStatus(prefix,'No data loaded.'); return; }
       const sISO=this.sISO, eISO=this.eISO;
       if(!sISO || !eISO || sISO>eISO){ setStatus(prefix,'Invalid date range.'); return; }
@@ -1513,17 +1243,14 @@ function createWorkspaceC(prefix){
       Object.assign(stateC.params,stateC.paramsDraft);
       let r;
       try{
-        const params={...stateC.params, ema:this.ema, rsi:this.rsi,
-                       sensTrend:this.sensTrend, sensCost:this.sensCost, wTrend:this.wTrend, wCost:this.wCost, wRsi:this.wRsi,
-                       alpha:this.alpha };
-        r=runWDCA(this.frequency,params,sISO,eISO);
+        r=runWDCA(this.frequency,stateC.params,sISO,eISO);
       } catch(err){
         console.error('[Backtest '+prefix.toUpperCase()+']',err);
         setStatus(prefix,'Error: '+err.message);
         return;
       }
       this.lastResult=r;
-      const userContrib=(r.invested||0)-(r.soldUSD||0)+(r.bankFinal||0);
+      const userContrib=r.invested||0;
       const ls=r.firstBuyDate?calcLumpSum(userContrib,r.firstBuyDate,r.lastPrice):null;
       this.updateKPI(r,ls);
       try{
@@ -1548,16 +1275,16 @@ function createWorkspaceC(prefix){
 
     reset(){
       if(!RAW.length) return; const min=RAW[0].date, max=RAW[RAW.length-1].date;
-      el('freq').value='weekly'; el('base').value=100; el('min').value=50; el('max').value=300; el('overdraft').value=0; el('step').value=5;
-      el('ema').value=50; el('rsi').value=14; el('sensTrend').value=0.08; el('sensCost').value=0.10; el('wTrend').value=0.5; el('wCost').value=0.3; el('wRsi').value=0.2; el('alpha').value=0.35; el('preset').value='standard';
-      ['base','min','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','coolW','phaseLB','phaseCutUp','phaseBoostDn','bankReserve','bankCap'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); });
+      el('freq').value='weekly'; el('base').value=100; el('min').value=50; el('max').value=300; el('step').value=5;
+      el('rsiPeriod').value=14; el('rsiOS').value=30; el('rsiOB').value=70; el('emaTrend').value=200; el('preset').value='standard';
+      ['repeat','base','min','max','step','rsiPeriod','rsiOS','rsiOB','emaTrend'].forEach(id=>{ if(id==='repeat'){stateC.paramsDraft.repeat='weekly'; stateC.params.repeat='weekly';} else { stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); } });
       updateBacktestDisabled();
       this.ensurePickers(); this.fpStart.setDate(min,true); this.fpEnd.setDate(max,true);
       el('maOn').checked=false; el('emaOn').checked=false; el('rsiOn').checked=true; el('rsiAlertOn').checked=true;
-      el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriod').value=14; el('rsiNear').value=2;
+      el('maPeriod').value=50; el('emaPeriod').value=200; el('rsiPeriodInd').value=14; el('rsiNear').value=2; el('showEmaTrend').checked=false;
       setStatus(prefix,'Ready.');
       this.chartMain&&this.chartMain.destroy(); this.chartMain=null; this.chartRSI&&this.chartRSI.destroy(); this.chartRSI=null; this.chartBS&&this.chartBS.destroy(); this.chartBS=null; document.getElementById('c_tradeWrap').style.display='none';
-      ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_bankFinal','k_bankMin','k_avgMult','k_hits','k_sells','k_net'].forEach(id=>{ el(id).textContent='-'; });
+      ['k_duration','k_trades','k_invested','k_btc','k_avg','k_value','k_pnl','k_vsls','k_savings','k_avgMult','k_hits'].forEach(id=>{ el(id).textContent='-'; });
       ['k_trades_ab','k_invested_ab','k_btc_ab','k_avg_ab','k_value_ab','k_pnl_ab'].forEach(id=>{ el(id).textContent=''; });
       el('amtHint').textContent='';
       el('log').innerHTML='';
@@ -1569,14 +1296,14 @@ function createWorkspaceC(prefix){
         const self=this; this.ensurePickers();
         document.querySelectorAll('#'+prefix.toUpperCase()+' input, #'+prefix.toUpperCase()+' select').forEach(elm=>{ ['input','change'].forEach(ev=>elm.addEventListener(ev,debouncedMH)); });
         document.querySelectorAll('#'+prefix.toUpperCase()+" input[type='number']").forEach(elm=>{ elm.addEventListener('change',()=>setInputValue(elm,num(elm.value))); });
-        ['start','end','freq'].forEach(id=>{ el(id).addEventListener('change',()=>{ self.updateRangeHint(); debouncedMH(); }); });
+        ['start','end','freq'].forEach(id=>{ el(id).addEventListener('change',()=>{ if(id==='freq'){ stateC.paramsDraft.repeat=el('freq').value; stateC.params.repeat=stateC.paramsDraft.repeat; } self.updateRangeHint(); debouncedMH(); }); });
         document.getElementById(prefix+'_runBtn').addEventListener('click',()=>self.run());
         document.getElementById(prefix+'_resetBtn').addEventListener('click',()=>self.reset());
-        ['maOn','emaOn','rsiOn','rsiAlertOn','maPeriod','emaPeriod','rsiPeriod','rsiNear'].forEach(id=>{ el(id).addEventListener('change',()=>self.refreshIndicatorsOnly()); });
+        ['maOn','emaOn','rsiOn','rsiAlertOn','maPeriod','emaPeriod','rsiPeriodInd','rsiNear','showEmaTrend'].forEach(id=>{ el(id).addEventListener('change',()=>self.refreshIndicatorsOnly()); });
         el('preset').addEventListener('change',()=>{
           const sel=el('preset').value; const key=sel.charAt(0).toUpperCase()+sel.slice(1);
           const cfg=WDCA_PRESETS[key];
-          if(cfg){ Object.entries(cfg).forEach(([k,v])=>{ const inp=getI(prefix,k); if(inp) setInputValue(inp,v); }); ['base','min','max','overdraft','step','ob1','ob2','ob3','sL1','sL2','sL3','profitGuard','minSell','maxSellW','coolW','phaseLB','phaseCutUp','phaseBoostDn','bankReserve','bankCap'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); }); updateBacktestDisabled(); }
+          if(cfg){ Object.entries(cfg).forEach(([k,v])=>{ const inp=getI(prefix,k); if(inp) setInputValue(inp,v); }); ['base','min','max','step','rsiPeriod','rsiOS','rsiOB','emaTrend'].forEach(id=>{ stateC.paramsDraft[id]=parseNumber(el(id).value); stateC.params[id]=stateC.paramsDraft[id]; validateField(id); }); updateBacktestDisabled(); }
         });
       }
   };
